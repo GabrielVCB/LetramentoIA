@@ -21,29 +21,10 @@ A solução tem três peças:
 
 ## Como baixar o projeto
 
-A prévia disponibiliza um ZIP com todo o código-fonte em **`/sentinela-projeto.zip`**:
+Você pode clonar este repositório via Git ou baixar o código-fonte completo em formato ZIP:
 
-- No rodapé da página inicial, clique em **Baixar projeto (.zip)**.
-- Ou, no painel autenticado, use **Baixar projeto (.zip)** no rodapé do menu lateral.
-- Rodando localmente, o endereço é `http://localhost:5173/sentinela-projeto.zip`.
+* **[Clique aqui para baixar o projeto (.zip)](https://github.com/GabrielVCB/LetramentoIA/archive/refs/heads/main.zip)**
 
-No Windows/PowerShell, descompacte com:
-
-```powershell
-Expand-Archive -Path .\sentinela-projeto.zip -DestinationPath .
-cd sentinela
-```
-
-O ZIP contém `src/`, `extensao/`, `servidor/`, `tests/` e os arquivos de configuração.
-Ficam de fora, de propósito: `node_modules/`, `dist/`, `.env*`, `servidor/*.db`,
-`__pycache__/` e `src/convex/_generated/` (gerado pelo Convex).
-
-A extensão e o servidor Flask funcionam sozinhos após o download. Para rodar também o painel
-React/Convex, crie um deployment Convex próprio e configure `CONVEX_DEPLOYMENT`,
-`VITE_CONVEX_URL` e as chaves de autenticação exigidas pelo template (as credenciais do
-ambiente de prévia não acompanham o ZIP).
-
----
 
 ## 1. Como está organizado
 
