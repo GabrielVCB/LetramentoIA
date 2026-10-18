@@ -136,9 +136,9 @@ esse arquivo.
 ## 4. Instalar a extensão no Chrome
 
 1. Abra **chrome://extensions**.
-2. Ative o **Modo de programador** (canto superior direito).
-3. Clique em **Carregar sem expandida** e selecione a pasta `extensao/`.
-4. Na extensão clique em **Detalhes** e abra **Opções de extensão**.
+2. Ative o **Modo de programador/desenvolvedor** (canto superior direito).
+3. Clique em **Carregar sem compactação** e selecione a pasta `extensao/`.
+4. Na extensão clique em **Detalhes/Saiba mais** e abra **Opções de extensão**.
 5. Preencha:
    - URL do servidor: `http://localhost:5000`
    - Token de API: o mesmo de `SENTINELA_API_TOKEN`
@@ -162,36 +162,5 @@ reenviados na próxima sincronização ou pelo botão **Reenviar fila**.
 
 > Em alguns sites o evento sintético usado para reenviar a mensagem pode ser ignorado. Se
 > isso acontecer, o texto continua no campo: basta pressionar Enter novamente.
-
----
-
-## 5. Roteiro de teste manual
-
-Abra o laboratório do painel (`/dashboard?secao=laboratorio`) ou a extensão e use as frases
-abaixo. O laboratório usa as mesmas regras do banco, então alterações em **Regras** mudam o
-resultado na hora.
-
-| # | Frase | Resultado esperado | Alerta |
-| --- | --- | --- | --- |
-| 1 | “Pode revisar a redação deste e-mail de agradecimento?” | Baixo, sem detecções | não criado |
-| 2 | “O fornecedor vai atrasar a entrega.” | Baixo — Nome de fornecedor | criado só ao enviar |
-| 3 | “O orçamento interno do trimestre é R$ 240.000.” | Médio — Orçamento interno e Valor de despesa | modal de confirmação |
-| 4 | “Preciso revisar o cronograma do projeto Atlas.” | Médio — Cronograma de projeto | modal |
-| 5 | “O CPF do novo analista é 529.982.247-25.” | Alto — CPF | modal |
-| 6 | “O CPF é 529.982.247-24.” | Baixo, sem CPF (dígito inválido) | não criado |
-| 7 | “a api_key = sk-proj-8fJ2kLm9Qr4Tz7Xb1Nc6Vd3” | Alto — Token ou chave de API | modal |
-| 8 | “O servidor interno é 10.20.30.41.” | Alto — IP ou servidor interno | modal |
-| 9 | “Cartão 4111 1111 1111 1111 do cliente.” | Alto — Número de cartão (Luhn) | modal |
-| 10 | “function login(user) { return true; }” | Alto — Código-fonte interno | modal |
-| 11 | “A cláusula 7 do contrato prevê reajuste.” | Alto — Cláusulas contratuais | modal |
-| 12 | “Senha: inverno2026” | Alto — Senha ou credencial | modal |
-
-Depois de cada envio:
-
-1. Confirme que o texto **não** aparece em nenhuma tabela do painel.
-2. Abra **Alertas**, clique em **Detalhe** e confira os tipos detectados.
-3. Em “Enviou mesmo assim × cancelou”, veja o indicador de letramento do departamento.
-4. Crie o terceiro alerta de risco alto no mesmo departamento e confira o bloco de gargalos
-   (limiar padrão de 30%).
 
 ---
