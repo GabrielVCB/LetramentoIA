@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% block titulo %}Painel · Sentinela{% endblock %}
+
+{% block corpo %}
+<div class="app">
+  <aside class="menu">
+    <a class="marca-bloco" href="/">
+      <p class="marca">Sentinela</p>
+      <p class="micro">governança de ia</p>
+    </a>
+
+    <nav class="menu-nav" aria-label="Painel">
+      <button class="item ativo" type="button" data-ir="visao">
+        <span class="numero">01</span>
+        <span><strong>Visão geral</strong><small>Indicadores e gargalos</small></span>
+      </button>
+      <button class="item" type="button" data-ir="regras">
+        <span class="numero">02</span>
+        <span><strong>Regras</strong><small>Detectores editáveis</small></span>
+      </button>
+      <button class="item" type="button" data-ir="areas">
+        <span class="numero">03</span>
+        <span><strong>Áreas</strong><small>Matriz de risco</small></span>
+      </button>
+      <button class="item" type="button" data-ir="mensagens">
+        <span class="numero">04</span>
+        <span><strong>Mensagens</strong><small>Texto educativo</small></span>
+      </button>
+      <button class="item" type="button" data-ir="alertas">
+        <span class="numero">05</span>
+        <span><strong>Alertas</strong><small>Auditoria e retenção</small></span>
+      </button>
+    </nav>
+
+    <div class="menu-rodape">
+      <p class="rotulo">Sessão</p>
+      <p class="usuario">{{ usuario }}</p>
+      <a href="{{ url_for('logout') }}" class="link-sair">Encerrar sessão</a>
+    </div>
+  </aside>
+
+  <main class="conteudo">
+    <div class="topo">
+      <p class="rotulo" id="secao-descricao">Indicadores, evolução e gargalos de letramento.</p>
+      <p class="rotulo">Painel administrativo</p>
+    </div>
+
+    <!-- 01 · Visão geral -->
+    <section class="secao ativa" data-painel="visao">
+      <header class="secao-cabecalho">
+        <div>
+          <p class="rotulo">01 · Visão geral</p>
+          <h1>Relatórios de letramento</h1>
+          <p class="subtitulo">
+            O que os colaboradores levaram para fora — e o que decidiram revisar. Todos os
+            números vêm de metadados; nenhum texto de conversa é armazenado.
+          </p>
+        </div>
+        <button type="button" class="botao" id="atualizar-resumo">Atualizar</button>
+      </header>
+
+      <div class="metricas">
+        <div>
+          <p class="rotulo">Alertas registrados</p>
+          <p class="metrica" id="kpi-total">0</p>
+          <p class="micro" id="kpi-total-detalhe">carregando…</p>
+        </div>
+        <div>
+          <p class="rotulo">Risco alto</p>
+          <p class="metrica" id="kpi-alto">0</p>
+          <p class="micro" id="kpi-alto-detalhe">—</p>
+        </div>
+        <div>
+          <p class="rotulo">Enviou mesmo assim</p>
+          <p class="metrica" id="kpi-envio">0%</p>
+          <p class="micro" id="kpi-envio-detalhe">—</p>
+        </div>
+        <div>
+          <p class="rotulo">Tipos distintos</p>
+          <p class="metrica" id="kpi-tipos">0</p>
+          <p class="micro">categorias detectadas</p>
+        </div>
+      </div>
+
+      <section class="bloco-painel">
+        <div class="linha-titulo">
+          <h2>Evolução dos alertas</h2>
+          <span class="rotulo">Últimos 14 dias</span>
+        </div>
+        <div id="grafico-evolucao" class="grafico"></div>
+      </section>
+
+      <div class="grade-duas">
+        <section class="bloco-painel">
+          <h2>Risco alto por departamento</h2>
+          <p class="micro">Absoluto de alertas classificados como alto.</p>
+          <div id="barras-departamento"></div>
+        </section>
+        <section class="bloco-painel">
+          <h2>Tipos mais detectados</h2>
+          <p class="micro">Frequência por tipo, independente do nível.</p>
+          <ol id="lista-tipos" class="lista-tipos"></ol>
+        </section>
+      </div>
+
+      <section class="bloco-painel">
+        <div class="linha-titulo">
+          <h2>Enviou mesmo assim × cancelou</h2>
+          <form id="form-limiar" class="form-inline">
+            <label class="campo-inline">
+              <span class="rotulo">Limiar (%)</span>
+              <input type="number" id="limiar" min="0" max="100" value="{{ limiar_padrao }}" />
+            </label>
+            <button type="submit" class="botao">Aplicar</button>
+          </form>
+        </div>
+        <p class="micro">
+          Indicador de letramento: quanto maior a fatia escura, menor a efetividade dos avisos.
+        </p>
+
+        <div class="tabela-rolagem">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Departamento</th>
+                <th class="direita">Alertas</th>
+                <th class="direita">Risco alto</th>
+                <th>Enviou mesmo assim</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-letramento"></tbody>
+          </table>
+        </div>
+
+        <p class="nota" id="nota-limiar">
+          Gargalo = departamento com no mínimo 3 alertas e ao menos {{ limiar_padrao }}% deles em
+          risco alto.
+        </p>
+        <div id="gargalos"></div>
+      </section>
+
+      <section class="bloco-painel">
+        <div class="linha-titulo">
+          <h2>Últimos alertas</h2>
+          <button type="button" class="link" data-ir="alertas">Ver todos</button>
+        </div>
+        <ul id="ultimos" class="lista-simples"></ul>
+      </section>
+    </section>
+
+    <!-- 02 · Regras -->
+    <section class="secao" data-painel="regras">
+      <header class="secao-cabecalho">
+        <div>
+          <p class="rotulo">02 · Regras</p>
+          <h1>Detectores editáveis</h1>
+          <p class="subtitulo">
+            Cada regra pertence a uma área e carrega um nível de risco. A extensão baixa esta
+            lista a cada cinco minutos e aplica tudo localmente, no navegador.
+          </p>
+        </div>
+        <button type="button" class="botao primario" id="nova-regra">Nova regra</button>
+      </header>
+
+      <div class="barra-ferramentas">
+        <input type="search" id="busca-regras" placeholder="Buscar por nome, área ou padrão…" aria-label="Buscar regras" />
+        <span class="rotulo" id="contador-regras"></span>
+      </div>
+
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Regra</th>
+              <th>Área</th>
+              <th>Tipo</th>
+              <th>Risco</th>
+              <th>Ativa</th>
+              <th class="direita">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-regras"></tbody>
+        </table>
+      </div>
+
+      <p class="nota">
+        Detectores técnicos sempre ativos: CPF e CNPJ com dígitos verificadores · IPv4 privado e
+        hostnames internos · tokens e chaves de API · senhas e credenciais · dados bancários ·
+        cartões com Luhn · heurística de código-fonte.
+      </p>
+    </section>
+
+    <!-- 03 · Áreas -->
+    <section class="secao" data-painel="areas">
+      <header class="secao-cabecalho">
+        <div>
+          <p class="rotulo">03 · Áreas</p>
+          <h1>Estrutura da matriz</h1>
+          <p class="subtitulo">
+            As áreas organizam regras e alimentam os filtros. O nome é registrado no alerta como
+            departamento e o histórico é preservado após exclusões.
+          </p>
+        </div>
+        <button type="button" class="botao primario" id="nova-area">Nova área</button>
+      </header>
+
+      <ul id="lista-areas" class="lista-areas"></ul>
+    </section>
+
+    <!-- 04 · Mensagens -->
+    <section class="secao" data-painel="mensagens">
+      <header class="secao-cabecalho">
+        <div>
+          <p class="rotulo">04 · Mensagens</p>
+          <h1>Mensagens educativas</h1>
+          <p class="subtitulo">
+            É o texto exibido no aviso da extensão, abaixo dos tipos detectados. A alteração chega
+            aos navegadores na próxima sincronização.
+          </p>
+        </div>
+      </header>
+      <div id="mensagens" class="grade-mensagens"></div>
+    </section>
+
+    <!-- 05 · Alertas -->
+    <section class="secao" data-painel="alertas">
+      <header class="secao-cabecalho">
+        <div>
+          <p class="rotulo">05 · Alertas</p>
+          <h1>Auditoria de envios</h1>
+          <p class="subtitulo">
+            Somente metadados: quem digitou (ou anônimo), onde, qual risco, quais tipos e a
+            decisão de enviar ou cancelar.
+          </p>
+        </div>
+        <div class="acoes-cabecalho">
+          <a class="botao" id="exportar" href="{{ url_for('api_exportar_csv') }}">Exportar CSV</a>
+          <button type="button" class="botao" id="abrir-idade">Limpar por idade</button>
+          <button type="button" class="botao perigo" id="limpar-tudo">Limpar tudo</button>
+        </div>
+      </header>
+
+      <form id="form-filtros" class="filtros">
+        <label class="campo">
+          <span class="rotulo">De</span>
+          <input type="date" id="filtro-de" />
+        </label>
+        <label class="campo">
+          <span class="rotulo">Até</span>
+          <input type="date" id="filtro-ate" />
+        </label>
+        <label class="campo">
+          <span class="rotulo">Departamento</span>
+          <select id="filtro-departamento">
+            <option value="todos">Todos os departamentos</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span class="rotulo">Nível</span>
+          <select id="filtro-nivel">
+            <option value="todos">Todos os níveis</option>
+            <option value="baixo">Baixo</option>
+            <option value="medio">Médio</option>
+            <option value="alto">Alto</option>
+          </select>
+        </label>
+        <div class="filtros-acoes">
+          <button type="submit" class="botao primario">Aplicar</button>
+          <button type="button" class="botao" id="limpar-filtros">Limpar</button>
+        </div>
+      </form>
+
+      <p class="rotulo" id="resumo-listagem"></p>
+
+      <div class="tabela-rolagem">
+        <table class="tabela tabela-alertas">
+          <thead>
+            <tr>
+              <th>Data/hora</th>
+              <th>Departamento</th>
+              <th>Colaborador</th>
+              <th>Site</th>
+              <th>Nível</th>
+              <th>Ação</th>
+              <th>Tipos</th>
+              <th class="direita">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-alertas"></tbody>
+        </table>
+      </div>
+
+      <div class="paginacao">
+        <button type="button" class="botao" id="pagina-anterior">Anterior</button>
+        <span class="rotulo" id="pagina-info">—</span>
+        <button type="button" class="botao" id="pagina-proxima">Próxima</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Diálogo: regra -->
+<dialog id="dialogo-regra" class="dialogo">
+  <form id="form-regra" class="formulario-dialogo">
+    <div class="dialogo-topo">
+      <div>
+        <p class="rotulo">Regra de detecção</p>
+        <h2 id="titulo-regra">Nova regra</h2>
+      </div>
+      <button type="button" class="fechar-dialogo" data-fecha="dialogo-regra" aria-label="Fechar">×</button>
+    </div>
+
+    <input type="hidden" id="regra-id" />
+
+    <label class="campo">
+      <span class="rotulo">Nome</span>
+      <input type="text" id="regra-nome" maxlength="80" placeholder="Ex.: Dados bancários" required />
+    </label>
+
+    <div class="grade-form">
+      <label class="campo">
+        <span class="rotulo">Área</span>
+        <select id="regra-area" required></select>
+      </label>
+      <label class="campo">
+        <span class="rotulo">Tipo</span>
+        <select id="regra-tipo">
+          <option value="palavra-chave">Palavra-chave</option>
+          <option value="regex">Regex</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="campo">
+      <span class="rotulo">Padrão</span>
+      <textarea id="regra-padrao" rows="3" maxlength="500" placeholder="Termos separados por vírgula ou expressão regular" required></textarea>
+    </label>
+
+    <div class="grade-form">
+      <label class="campo">
+        <span class="rotulo">Risco</span>
+        <select id="regra-risco">
+          <option value="baixo">Baixo</option>
+          <option value="medio">Médio</option>
+          <option value="alto">Alto</option>
+        </select>
+      </label>
+      <label class="campo-inline caixa-ativa">
+        <input type="checkbox" id="regra-ativa" checked />
+        <span>Regra ativa</span>
+      </label>
+    </div>
+
+    <div class="teste-regra">
+      <p class="rotulo">Testar contra um texto</p>
+      <textarea id="regra-teste" rows="3" placeholder="Digite um texto de exemplo para validar o padrão."></textarea>
+      <div class="linha-teste">
+        <button type="button" class="botao" id="testar-regra">Testar regra</button>
+        <p id="resultado-teste" class="resultado" role="status"></p>
+      </div>
+    </div>
+
+    <div class="dialogo-acoes">
+      <button type="button" class="botao" data-fecha="dialogo-regra">Cancelar</button>
+      <button type="submit" class="botao primario">Salvar regra</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: área -->
+<dialog id="dialogo-area" class="dialogo">
+  <form id="form-area" class="formulario-dialogo">
+    <div class="dialogo-topo">
+      <div>
+        <p class="rotulo">Área da matriz</p>
+        <h2 id="titulo-area">Nova área</h2>
+      </div>
+      <button type="button" class="fechar-dialogo" data-fecha="dialogo-area" aria-label="Fechar">×</button>
+    </div>
+
+    <input type="hidden" id="area-id" />
+
+    <label class="campo">
+      <span class="rotulo">Nome</span>
+      <input type="text" id="area-nome" maxlength="60" placeholder="Ex.: Operações" required />
+    </label>
+    <label class="campo">
+      <span class="rotulo">Descrição</span>
+      <textarea id="area-descricao" rows="3" maxlength="240" placeholder="Que tipo de informação esta área protege?"></textarea>
+    </label>
+
+    <div class="dialogo-acoes">
+      <button type="button" class="botao" data-fecha="dialogo-area">Cancelar</button>
+      <button type="submit" class="botao primario">Salvar área</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diálogo: confirmação -->
+<dialog id="dialogo-confirmar" class="dialogo dialogo-estreito">
+  <div class="formulario-dialogo">
+    <p class="rotulo">Confirmação</p>
+    <h2 id="confirmar-titulo">Excluir?</h2>
+    <p id="confirmar-texto" class="subtitulo"></p>
+    <div class="dialogo-acoes">
+      <button type="button" class="botao" id="confirmar-cancelar">Cancelar</button>
+      <button type="button" class="botao perigo" id="confirmar-ok">Excluir</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Diálogo: detalhe do alerta -->
+<dialog id="dialogo-alerta" class="dialogo">
+  <div class="formulario-dialogo">
+    <div class="dialogo-topo">
+      <div>
+        <p class="rotulo">Detalhe do alerta</p>
+        <h2 id="detalhe-titulo">Alerta</h2>
+        <p class="micro" id="detalhe-sub"></p>
+      </div>
+      <button type="button" class="fechar-dialogo" data-fecha="dialogo-alerta" aria-label="Fechar">×</button>
+    </div>
+
+    <dl class="resumo-detalhe" id="detalhe-campos"></dl>
+    <div>
+      <p class="rotulo">Tipos detectados</p>
+      <ul class="lista-itens" id="detalhe-itens"></ul>
+    </div>
+    <p class="nota">
+      O texto da mensagem nunca foi enviado ao servidor nem armazenado. Este registro contém
+      apenas os metadados acima.
+    </p>
+
+    <div class="dialogo-acoes">
+      <button type="button" class="botao" data-fecha="dialogo-alerta">Fechar</button>
+      <button type="button" class="botao perigo" id="detalhe-excluir">Excluir alerta</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Diálogo: limpeza por idade -->
+<dialog id="dialogo-idade" class="dialogo dialogo-estreito">
+  <form id="form-idade" class="formulario-dialogo">
+    <p class="rotulo">Retenção</p>
+    <h2>Limpeza por idade</h2>
+    <p class="subtitulo">
+      Remove definitivamente os alertas mais antigos que o período informado. Os itens detectados
+      são removidos em cascata.
+    </p>
+    <label class="campo">
+      <span class="rotulo">Manter os últimos (dias)</span>
+      <input type="number" id="idade-dias" min="1" max="3650" value="30" required />
+    </label>
+    <div class="dialogo-acoes">
+      <button type="button" class="botao" data-fecha="dialogo-idade">Cancelar</button>
+      <button type="submit" class="botao primario">Executar limpeza</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='painel.js') }}" defer></script>
+{% endblock %}
