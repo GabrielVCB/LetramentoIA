@@ -202,9 +202,9 @@ O servidor **recalcula o nível** a partir dos itens recebidos e rejeita o corpo
 ## 4. Instalar a extensão no Chrome
 
 1. Abra **chrome://extensions**.
-2. Ative o **Modo do desenvolvedor** (canto superior direito).
-3. Clique em **Carregar sem compactação** e selecione a pasta `extensao/`.
-4. Fixe a extensão na barra e abra **Opções**.
+2. Ative o **Modo de programador** (canto superior direito).
+3. Clique em **Carregar sem expandida** e selecione a pasta `extensao/`.
+4. Na extensão clique em **Detalhes** e abra **Opções de extensão**.
 5. Preencha:
    - URL do servidor: `http://localhost:5000`
    - Token de API: o mesmo de `SENTINELA_API_TOKEN`
