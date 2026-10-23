@@ -66,10 +66,18 @@ class TestRotasPublicas(BaseSentinela):
         resposta = self.client.get("/api/config")
         self.assertEqual(resposta.status_code, 200)
         corpo = resposta.get_json()
-        self.assertEqual(len(corpo["regras"]), 24)
+        self.assertEqual(len(corpo["regras"]), 44)
         self.assertEqual(set(corpo["mensagens"].keys()), {"baixo", "medio", "alto"})
         self.assertTrue(all(regra["ativo"] for regra in corpo["regras"]))
-        self.assertIn("RH", [regra["area"] for regra in corpo["regras"]])
+        areas = [regra["area"] for regra in corpo["regras"]]
+        self.assertIn("RH", areas)
+        self.assertIn("Segurança da Informação", areas)
+
+        # As regras de palavra-chave são bilíngues.
+        salario = next(regra for regra in corpo["regras"] if regra["nome"] == "Salário")
+        self.assertIn("salary", salario["padrao"])
+        senha = next(regra for regra in corpo["regras"] if regra["nome"] == "Senha ou credencial")
+        self.assertIn("password", senha["padrao"])
 
     def test_alerta_exige_token(self):
         resposta = self.client.post("/api/alertas", json={"site": "chatgpt.com"})
@@ -99,6 +107,46 @@ class TestRotasPublicas(BaseSentinela):
         self.assertEqual(registro["itens"][0]["tipo_detectado"], "CPF")
         self.assertNotIn("texto", registro)
         self.assertNotIn("mensagem", registro)
+        self.assertEqual(registro["origem"], "texto")
+
+    def test_alerta_idempotente_e_origem(self):
+        primeiro = self.client.post(
+            "/api/alertas",
+            json={
+                "evento_id": "evento-1",
+                "origem": "imagem",
+                "site": "chatgpt.com",
+                "departamento": "TI",
+                "nivel_risco": "alto",
+                "acao": "enviou",
+                "tipos_detectados": [
+                    {"tipo_detectado": "Token ou chave de API", "risco": "alto", "area": "TI"}
+                ],
+            },
+            headers=TOKEN,
+        )
+        self.assertEqual(primeiro.status_code, 201)
+
+        repetido = self.client.post(
+            "/api/alertas",
+            json={
+                "evento_id": "evento-1",
+                "origem": "imagem",
+                "site": "chatgpt.com",
+                "departamento": "TI",
+                "nivel_risco": "alto",
+                "acao": "enviou",
+                "tipos_detectados": [],
+            },
+            headers=TOKEN,
+        )
+        self.assertEqual(repetido.status_code, 200)
+        self.assertTrue(repetido.get_json()["duplicado"])
+
+        self.entrar()
+        listagem = self.client.get("/api/admin/alertas").get_json()
+        self.assertEqual(listagem["total"], 1)
+        self.assertEqual(listagem["registros"][0]["origem"], "imagem")
 
     def test_api_admin_sem_sessao_retorna_401(self):
         self.assertEqual(self.client.get("/api/admin/resumo").status_code, 401)
@@ -113,10 +161,16 @@ class TestAutenticacao(BaseSentinela):
         self.assertEqual(resposta.status_code, 401)
         self.assertIn(b"inv\xc3\xa1lidos", resposta.data)
 
-    def test_painel_exige_login(self):
-        resposta = self.client.get("/", follow_redirects=False)
-        self.assertEqual(resposta.status_code, 302)
-        self.assertIn("/login", resposta.headers["Location"])
+    def test_landing_e_publica_e_painel_exige_login(self):
+        inicio = self.client.get("/")
+        self.assertEqual(inicio.status_code, 200)
+        self.assertIn(b"Entrar no painel", inicio.data)
+        self.assertIn(b"lp-demo", inicio.data)
+        self.assertNotIn(b"Projeto acad\xc3\xaanico", inicio.data)
+
+        painel = self.client.get("/painel", follow_redirects=False)
+        self.assertEqual(painel.status_code, 302)
+        self.assertIn("/login", painel.headers["Location"])
 
     def test_login_page_e_arquivos_estaticos(self):
         pagina = self.client.get("/login")
@@ -133,7 +187,7 @@ class TestAutenticacao(BaseSentinela):
 
     def test_login_correto_abre_painel(self):
         self.entrar()
-        resposta = self.client.get("/")
+        resposta = self.client.get("/painel")
         self.assertEqual(resposta.status_code, 200)
         self.assertIn(b"Sentinela", resposta.data)
 
@@ -174,7 +228,7 @@ class TestRelatorios(BaseSentinela):
         self.assertEqual(csv.status_code, 200)
         self.assertIn("text/csv", csv.headers["Content-Type"])
         texto = csv.data.decode("utf-8-sig")
-        self.assertTrue(texto.startswith("Data/hora;Site;Departamento"))
+        self.assertTrue(texto.startswith("Data/hora;Site;Origem;Departamento"))
         self.assertIn("CPF", texto)
 
     def test_filtros_paginacao_detalhe_e_exclusao(self):

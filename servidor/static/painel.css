@@ -753,7 +753,13 @@ textarea:focus {
 }
 
 .tabela-alertas {
-  min-width: 900px;
+  min-width: 980px;
+}
+
+.tabela td.origem {
+  font-size: 11px;
+  color: var(--cinza-claro);
+  white-space: nowrap;
 }
 
 .tabela .subtexto {

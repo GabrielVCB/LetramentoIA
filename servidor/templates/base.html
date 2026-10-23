@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex" />
     <title>{% block titulo %}Sentinela · Governança de IA{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='painel.css') }}" />
+    {% block estilos %}{% endblock %}
   </head>
   <body>
     {% block corpo %}{% endblock %}

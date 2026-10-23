@@ -28,6 +28,13 @@ const SECAO_INFO = {
 };
 
 const ROTULO_NIVEL = { baixo: "Baixo", medio: "Médio", alto: "Alto" };
+const ROTULO_ORIGEM = {
+  texto: "Texto digitado",
+  colagem: "Colagem em massa",
+  imagem: "Print ou imagem",
+  pdf: "Arquivo PDF",
+  anexo: "Imagem e PDF",
+};
 
 // ---------------------------------------------------------------------------
 // Utilidades
@@ -915,7 +922,7 @@ async function carregarAlertas(pagina) {
   if (!dados.registros.length) {
     const linha = criar("tr");
     const celula = criar("td", "nota", "Nenhum alerta com estes filtros.");
-    celula.colSpan = 8;
+    celula.colSpan = 9;
     linha.appendChild(celula);
     corpo.appendChild(linha);
     return;
@@ -928,6 +935,9 @@ async function carregarAlertas(pagina) {
     linha.appendChild(criar("td", "", alerta.departamento));
     linha.appendChild(criar("td", "", alerta.colaborador || "anônimo"));
     linha.appendChild(criar("td", "", alerta.site));
+    linha.appendChild(
+      criar("td", "origem", ROTULO_ORIGEM[alerta.origem] || "Texto digitado"),
+    );
 
     const nivel = criar("td");
     nivel.appendChild(badge(alerta.nivel_risco));
@@ -991,7 +1001,7 @@ async function abrirDetalhe(id) {
       ["Nível de risco", ROTULO_NIVEL[alerta.nivel_risco]],
       ["Ação", alerta.acao === "enviou" ? "Enviou mesmo assim" : "Cancelou e revisou"],
       ["Colaborador", alerta.colaborador || "anônimo"],
-      ["Origem", "Extensão Sentinela"],
+      ["Origem", ROTULO_ORIGEM[alerta.origem] || "Texto digitado"],
     ];
     pares.forEach(function (par) {
       const linha = criar("div");

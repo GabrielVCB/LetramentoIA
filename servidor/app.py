@@ -5,16 +5,18 @@ Execução local (Windows/PowerShell):
     python app.py
 
 Rotas públicas:
+    GET  /                   landing (primeira tela)
+    GET  /login              formulário de acesso
     GET  /api/ping
     GET  /api/config
-    POST /api/alertas        (header X-API-Token)
+    POST /api/alertas        (header X-API-Token, idempotente por evento_id)
 
 Painel (sessão):
-    /login, /, /logout
+    /painel, /logout
     /api/admin/*             (JSON, protegido por sessão)
 
 O servidor nunca recebe o texto digitado pelo colaborador: apenas metadados
-do alerta (site, departamento, nível, tipos detectados e ação).
+do alerta (site, departamento, nível, tipos detectados, origem e ação).
 """
 import csv
 import hmac
@@ -232,6 +234,7 @@ def itens_do_alerta(conexao_aberta, alerta_id: int) -> list:
 def serializar_alerta(linha, itens: list) -> dict:
     return {
         "id": linha["id"],
+        "origem": linha["origem"] or "texto",
         "data_hora": linha["data_hora"],
         "site": linha["site"],
         "departamento": linha["departamento"],
@@ -255,7 +258,7 @@ def tratar_validacao(erro):
 def tratar_404(erro):
     if request.path.startswith("/api/"):
         return jsonify({"erro": "Recurso não encontrado."}), 404
-    return render_template("login.html", erro=None), 404
+    return render_template("landing.html", **contexto_landing()), 404
 
 
 @app.errorhandler(413)
@@ -286,7 +289,7 @@ def api_ping():
         {
             "ok": True,
             "mensagem": "Sentinela online.",
-            "versao": "1.0.0",
+            "versao": "2.0.0",
             "hora": agora_iso(),
         }
     )
@@ -350,6 +353,11 @@ def api_criar_alerta():
         raise ErroValidacao("Ação deve ser enviou ou cancelou.")
     data_hora = normalizar_data_hora(corpo.get("data_hora"))
 
+    evento_id = texto_opcional(corpo.get("evento_id"), "Identificador do evento", 64)
+    origem = (corpo.get("origem") or "texto").strip().lower()
+    if origem not in db.ORIGENS:
+        raise ErroValidacao("Origem deve ser texto, colagem, imagem, pdf ou anexo.")
+
     tipos = corpo.get("tipos_detectados", [])
     if not isinstance(tipos, list) or len(tipos) > 20:
         raise ErroValidacao("tipos_detectados deve ser uma lista com até 20 itens.")
@@ -384,13 +392,49 @@ def api_criar_alerta():
 
     conexao_aberta = conexao()
     try:
-        cursor = conexao_aberta.execute(
-            """
-            INSERT INTO alertas (data_hora, site, departamento, colaborador, nivel_risco, acao)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (data_hora, site, departamento, colaborador, nivel_final, acao),
-        )
+        # Idempotência: a extensão reenvia a fila quando a conexão volta. O mesmo
+        # evento nunca deve gerar duas linhas na auditoria.
+        if evento_id:
+            existente = conexao_aberta.execute(
+                "SELECT id FROM alertas WHERE evento_id = ?", (evento_id,)
+            ).fetchone()
+            if existente is not None:
+                return (
+                    jsonify(
+                        {
+                            "id": existente["id"],
+                            "duplicado": True,
+                            "mensagem": "Alerta já registrado.",
+                        }
+                    ),
+                    200,
+                )
+
+        try:
+            cursor = conexao_aberta.execute(
+                """
+                INSERT INTO alertas
+                    (evento_id, origem, data_hora, site, departamento, colaborador, nivel_risco, acao)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (evento_id, origem, data_hora, site, departamento, colaborador, nivel_final, acao),
+            )
+        except sqlite3.IntegrityError:
+            conexao_aberta.rollback()
+            existente = conexao_aberta.execute(
+                "SELECT id FROM alertas WHERE evento_id = ?", (evento_id,)
+            ).fetchone()
+            return (
+                jsonify(
+                    {
+                        "id": existente["id"] if existente else None,
+                        "duplicado": True,
+                        "mensagem": "Alerta já registrado.",
+                    }
+                ),
+                200,
+            )
+
         alerta_id = cursor.lastrowid
         conexao_aberta.executemany(
             """
@@ -411,6 +455,44 @@ def api_criar_alerta():
 # ---------------------------------------------------------------------------
 # Autenticação do painel
 # ---------------------------------------------------------------------------
+
+def areas_para_landing() -> list:
+    """Matriz de risco exibida na página inicial, direto do banco."""
+    conexao_aberta = conexao()
+    try:
+        areas = conexao_aberta.execute(
+            "SELECT id, nome, descricao FROM areas ORDER BY id"
+        ).fetchall()
+        regras = conexao_aberta.execute(
+            "SELECT area_id, nome, risco FROM regras WHERE ativo = 1 ORDER BY id"
+        ).fetchall()
+    finally:
+        conexao_aberta.close()
+
+    por_area = {}
+    for regra in regras:
+        por_area.setdefault(regra["area_id"], []).append(
+            {"nome": regra["nome"], "risco": regra["risco"]}
+        )
+
+    return [
+        {
+            "nome": area["nome"],
+            "descricao": area["descricao"],
+            "regras": por_area.get(area["id"], []),
+        }
+        for area in areas
+    ]
+
+
+def contexto_landing() -> dict:
+    return {"areas": areas_para_landing(), "ano": datetime.now().year}
+
+
+@app.get("/")
+def landing():
+    return render_template("landing.html", **contexto_landing())
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -452,10 +534,10 @@ def login():
 @app.get("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("landing"))
 
 
-@app.get("/")
+@app.get("/painel")
 @exigir_sessao_pagina
 def painel():
     return render_template(
@@ -777,14 +859,31 @@ def api_exportar_csv():
     saida = io.StringIO()
     escritor = csv.writer(saida, delimiter=";", lineterminator="\r\n")
     escritor.writerow(
-        ["Data/hora", "Site", "Departamento", "Colaborador", "Nível", "Ação", "Tipos"]
+        [
+            "Data/hora",
+            "Site",
+            "Origem",
+            "Departamento",
+            "Colaborador",
+            "Nível",
+            "Ação",
+            "Tipos",
+        ]
     )
     rotulos = {"baixo": "Baixo", "medio": "Médio", "alto": "Alto"}
+    origens = {
+        "texto": "Texto digitado",
+        "colagem": "Colagem em massa",
+        "imagem": "Print ou imagem",
+        "pdf": "Arquivo PDF",
+        "anexo": "Imagem e PDF",
+    }
     for linha in linhas:
         escritor.writerow(
             [
                 linha["data_hora"].replace("T", " "),
                 linha["site"],
+                origens.get(linha["origem"], "Texto digitado"),
                 linha["departamento"],
                 linha["colaborador"] or "anônimo",
                 rotulos.get(linha["nivel_risco"], linha["nivel_risco"]),
@@ -1129,7 +1228,8 @@ def avisar_configuracao_padrao() -> None:
 
 
 def main() -> None:
-    print(f"[Sentinela] Painel: http://localhost:{PORTA}")
+    print(f"[Sentinela] Início: http://localhost:{PORTA}")
+    print(f"[Sentinela] Painel: http://localhost:{PORTA}/painel")
     print(f"[Sentinela] API:    http://localhost:{PORTA}/api/ping")
     app.run(host="127.0.0.1", port=PORTA, debug=False)
 

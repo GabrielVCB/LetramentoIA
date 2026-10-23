@@ -4,10 +4,10 @@
 {% block corpo %}
 <main class="login-pagina">
   <aside class="login-editorial">
-    <div class="marca-bloco">
-      <p class="marca">Sentinela</p>
-      <p class="micro">governança de ia</p>
-    </div>
+    <a class="marca-bloco" href="{{ url_for('landing') }}">
+      <span class="marca">Sentinela</span>
+      <span class="micro">governança de ia</span>
+    </a>
 
     <div class="login-texto">
       <p class="rotulo">Painel administrativo</p>
@@ -24,15 +24,15 @@
       </dl>
     </div>
 
-    <p class="nota-rodape">Projeto acadêmico de Gestão de Pessoas · roda localmente</p>
+    <p class="nota-rodape">Sentinela · governança de IA · roda localmente</p>
   </aside>
 
   <section class="login-formulario">
     <div class="login-caixa">
-      <div class="marca-bloco login-marca-mobile">
-        <p class="marca">Sentinela</p>
-        <p class="micro">governança de ia</p>
-      </div>
+      <a class="marca-bloco login-marca-mobile" href="{{ url_for('landing') }}">
+        <span class="marca">Sentinela</span>
+        <span class="micro">governança de ia</span>
+      </a>
 
       <p class="rotulo">Acesso restrito</p>
       <h2>Entrar no painel</h2>
@@ -56,7 +56,11 @@
       </form>
 
       <p class="nota-rodape">
-        O acesso é restrito a RH e gestores autorizados. As sessões expiram em oito horas.
+        O acesso é restrito a pessoas autorizadas. As sessões expiram em oito horas.
+      </p>
+
+      <p class="nota-rodape">
+        <a href="{{ url_for('landing') }}">← Voltar para a página inicial</a>
       </p>
     </div>
   </section>
