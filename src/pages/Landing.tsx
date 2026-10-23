@@ -141,7 +141,7 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
             >
-              <p className="rotulo">Gestão de pessoas · governança de dados</p>
+              <p className="rotulo">Governança de dados · uso de IA</p>
               <h1 className="mt-6 max-w-xl font-serif text-[2.9rem] leading-[0.98] tracking-tight text-balance sm:text-6xl lg:text-[4.15rem]">
                 O que é confidencial não deveria virar <em className="italic">prompt</em>.
               </h1>
@@ -179,7 +179,9 @@ export default function Landing() {
                 </div>
                 <div>
                   <dt className="rotulo">Áreas</dt>
-                  <dd className="mt-1 font-serif text-2xl">05</dd>
+                  <dd className="mt-1 font-serif text-2xl">
+                    {String(AREAS_SEED.length).padStart(2, "0")}
+                  </dd>
                 </div>
                 <div>
                   <dt className="rotulo">Texto enviado</dt>
@@ -381,7 +383,7 @@ export default function Landing() {
             <div>
               <p className="rotulo">03 — Matriz de risco</p>
               <h2 className="mt-5 font-serif text-4xl leading-[1.05] tracking-tight">
-                Cinco áreas, uma escala só.
+                {AREAS_SEED.length} áreas, uma escala só.
               </h2>
             </div>
             <p className="max-w-xs text-xs leading-6 text-muted-foreground">
@@ -564,8 +566,8 @@ export default function Landing() {
               <span className="rotulo">governança de ia</span>
             </Link>
             <p className="mt-3 max-w-sm text-[11px] leading-5 text-muted-foreground">
-              Projeto acadêmico de Gestão de Pessoas: painel de governança, auditoria e letramento
-              em IA. Extensão Chrome MV3 + servidor Flask com SQLite, rodando localmente.
+              Painel de governança, auditoria e letramento em IA. Extensão Chrome MV3 + servidor
+              Flask com SQLite, rodando localmente.
             </p>
           </div>
 
@@ -618,7 +620,7 @@ export default function Landing() {
         </div>
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-4 text-[10px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <span>© {new Date().getFullYear()} Sentinela · projeto acadêmico</span>
+            <span>© {new Date().getFullYear()} Sentinela</span>
             <span className="tabular">Chrome MV3 · Flask · SQLite · local-first</span>
           </div>
         </div>

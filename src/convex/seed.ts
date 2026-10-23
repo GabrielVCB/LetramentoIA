@@ -133,24 +133,61 @@ async function semearAmostra(ctx: MutationCtx) {
 export const garantirSeed = mutation({
   args: {},
   handler: async (ctx) => {
-    const areaExistente = await ctx.db.query("areas").first();
+    // Sincroniza a matriz expandida mesmo em bancos já semeados. Na primeira
+    // execução da versão 2, atualiza as regras semeadas (padrão bilíngue);
+    // depois disso, só cria o que falta, preservando edições feitas no painel.
+    const controleVersao = await ctx.db
+      .query("configuracoes")
+      .withIndex("por_chave", (q) => q.eq("chave", "matrizVersao"))
+      .first();
+    const atualizarMatriz = !controleVersao || controleVersao.valor !== "2";
 
-    if (!areaExistente) {
-      for (const area of AREAS_SEED) {
-        const areaId = await ctx.db.insert("areas", {
+    for (const area of AREAS_SEED) {
+      const areaExistente = await ctx.db
+        .query("areas")
+        .withIndex("por_nome", (q) => q.eq("nome", area.nome))
+        .first();
+
+      const areaId =
+        areaExistente?._id ??
+        (await ctx.db.insert("areas", {
           nome: area.nome,
           descricao: area.descricao,
-        });
-        for (const regra of area.regras) {
-          await ctx.db.insert("regras", {
-            areaId,
-            nome: regra.nome,
-            tipo: regra.tipo,
-            padrao: regra.padrao,
-            risco: regra.risco,
-            ativo: true,
-          });
+        }));
+
+      const existentes = await ctx.db
+        .query("regras")
+        .withIndex("por_area", (q) => q.eq("areaId", areaId))
+        .collect();
+
+      for (const regra of area.regras) {
+        const existente = existentes.find((item) => item.nome === regra.nome);
+        if (existente) {
+          if (atualizarMatriz) {
+            await ctx.db.patch(existente._id, {
+              tipo: regra.tipo,
+              padrao: regra.padrao,
+              risco: regra.risco,
+            });
+          }
+          continue;
         }
+        await ctx.db.insert("regras", {
+          areaId,
+          nome: regra.nome,
+          tipo: regra.tipo,
+          padrao: regra.padrao,
+          risco: regra.risco,
+          ativo: true,
+        });
+      }
+    }
+
+    if (atualizarMatriz) {
+      if (controleVersao) {
+        await ctx.db.patch(controleVersao._id, { valor: "2" });
+      } else {
+        await ctx.db.insert("configuracoes", { chave: "matrizVersao", valor: "2" });
       }
     }
 

@@ -252,7 +252,111 @@ function detectoresEmbutidos(texto: string): Deteccao[] {
     });
   }
 
+  // Chaves privadas em bloco PEM.
+  if (/-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/.test(texto)) {
+    deteccoes.push({
+      tipo: "Chave privada",
+      area: "TI",
+      risco: "alto",
+      ocorrencias: 1,
+    });
+  }
+
+  // Strings de conexão com banco ou fila.
+  const conexoes =
+    texto.match(/(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqp|mssql):\/\/[^\s"']+/gi) ?? [];
+  if (conexoes.length > 0) {
+    deteccoes.push({
+      tipo: "String de conexão",
+      area: "TI",
+      risco: "alto",
+      ocorrencias: conexoes.length,
+    });
+  }
+
+  // URLs assinadas ou com token de sessão.
+  const urlsAssinadas =
+    texto.match(
+      /https?:\/\/[^\s'"<>]*[?&](?:token|access_token|signature|X-Amz-Signature|sig|key)=[^\s&]+/gi,
+    ) ?? [];
+  if (urlsAssinadas.length > 0) {
+    deteccoes.push({
+      tipo: "URL com token de sessão",
+      area: "TI",
+      risco: "alto",
+      ocorrencias: urlsAssinadas.length,
+    });
+  }
+
+  // Credencial embutida em URL (usuário:senha@host).
+  const credenciaisUrl =
+    texto.match(/\b[a-z0-9._%-]+:[^\s@/]{4,}@[a-z0-9.-]+\.[a-z]{2,}\b/gi) ?? [];
+  if (credenciaisUrl.length > 0) {
+    deteccoes.push({
+      tipo: "Credencial em URL",
+      area: "Segurança da Informação",
+      risco: "alto",
+      ocorrencias: credenciaisUrl.length,
+    });
+  }
+
+  // Bloco de variáveis de ambiente com nomes sensíveis (.env).
+  const linhasEnv = texto.split("\n").filter((linha) => {
+    const limpa = linha.trim();
+    return (
+      /^[A-Z][A-Z0-9_]{2,}\s*=\s*\S+/.test(limpa) &&
+      /(KEY|TOKEN|SECRET|PASS|PWD|API|DATABASE|AWS|PRIVATE|CREDENTIAL)/.test(limpa)
+    );
+  });
+  if (linhasEnv.length >= 2) {
+    deteccoes.push({
+      tipo: "Credenciais em arquivo de ambiente",
+      area: "Segurança da Informação",
+      risco: "alto",
+      ocorrencias: linhasEnv.length,
+    });
+  }
+
+  // E-mails: um contato isolado é risco baixo; uma lista já é vazamento.
+  const emails = texto.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g) ?? [];
+  if (emails.length >= 5) {
+    deteccoes.push({
+      tipo: "Lista de contatos",
+      area: "Segurança da Informação",
+      risco: "alto",
+      ocorrencias: emails.length,
+    });
+  } else if (emails.length > 0) {
+    deteccoes.push({
+      tipo: "E-mail",
+      area: "RH",
+      risco: "baixo",
+      ocorrencias: emails.length,
+    });
+  }
+
   return deteccoes;
+}
+
+/** Tamanho mínimo, em caracteres, para tratar uma colagem como bloco. */
+export const LIMITE_COLAGEM = 1200;
+
+/**
+ * Classifica uma colagem de bloco inteiro: trechos grandes de texto, código
+ * ou listas colados de uma só vez escapam da revisão linha a linha.
+ */
+export function avaliarColagem(texto: string): Deteccao | null {
+  const limpo = (texto || "").trim();
+  if (limpo.length < LIMITE_COLAGEM) return null;
+  const linhas = limpo.split("\n").length;
+  const risco: Risco =
+    pareceCodigoFonte(limpo) || limpo.length >= 6000 || linhas >= 80 ? "alto" : "medio";
+  return {
+    tipo: "Colagem de bloco extenso",
+    area: "Segurança da Informação",
+    risco,
+    ocorrencias: 1,
+  };
 }
 
 /** Pontuação heurística: 2 ou mais sinais indicam trecho de código. */
@@ -330,6 +434,19 @@ export function classificar(deteccoes: Deteccao[]): Risco {
   if (deteccoes.some((item) => item.risco === "alto")) return "alto";
   if (deteccoes.some((item) => item.risco === "medio")) return "medio";
   return "baixo";
+}
+
+/**
+ * Mescla detecções de fontes diferentes (texto, colagem, imagem, PDF) em uma
+ * única análise consolidada. Usado pela extensão, que analisa anexos à parte.
+ */
+export function mesclarDeteccoes(deteccoes: Deteccao[]): Analise {
+  const consolidadas = consolidar(deteccoes);
+  return {
+    nivel: classificar(consolidadas),
+    deteccoes: consolidadas,
+    totalOcorrencias: consolidadas.reduce((total, item) => total + item.ocorrencias, 0),
+  };
 }
 
 /**

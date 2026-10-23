@@ -126,7 +126,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         </div>
 
         <p className="text-[10px] leading-5 text-muted-foreground">
-          Projeto acadêmico de Gestão de Pessoas · roda localmente
+          Sentinela · governança de IA · roda localmente
         </p>
       </aside>
 
@@ -200,8 +200,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               </Button>
 
               <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
-                O acesso de convidado existe para explorar o projeto acadêmico. Em produção, o
-                painel deve ser restrito a RH e gestores autorizados.
+                O acesso de convidado existe para explorar o painel. Em produção, o acesso deve
+                ser restrito a pessoas autorizadas.
               </p>
             </>
           ) : (
