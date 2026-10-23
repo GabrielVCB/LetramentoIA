@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Sentinela">
-  <rect width="512" height="512" fill="#191919"/>
-  <g fill="#f7f7f4">
-    <rect x="128" y="164" width="256" height="20"/>
-    <rect x="128" y="222" width="200" height="20"/>
-    <rect x="128" y="280" width="144" height="20"/>
-  </g>
-  <circle cx="352" cy="290" r="10" fill="#8a8a86"/>
-</svg>
