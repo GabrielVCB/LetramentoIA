@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sentinela — Opções</title>
+    <link rel="stylesheet" href="estilos.css" />
+  </head>
+  <body class="opcoes">
+    <header class="cabecalho-pagina">
+      <div>
+        <p class="marca">Sentinela</p>
+        <h1>Configuração da extensão</h1>
+        <p class="subtitulo">
+          Conecte ao servidor local, identifique o departamento e escolha onde o monitoramento
+          deve funcionar. Texto, colagens, prints e PDFs são analisados localmente.
+        </p>
+      </div>
+      <span id="status-ponto" class="ponto-status" aria-hidden="true"></span>
+    </header>
+
+    <main class="conteudo-pagina">
+      <section class="secao">
+        <div class="secao-titulo">
+          <span class="numero">01</span>
+          <div>
+            <h2>Servidor</h2>
+            <p>Por padrão, o Flask roda em http://localhost:5000.</p>
+          </div>
+        </div>
+        <div class="grade">
+          <label class="campo">
+            <span class="rotulo">URL do servidor</span>
+            <input id="servidor" type="url" placeholder="http://localhost:5000" />
+          </label>
+          <label class="campo">
+            <span class="rotulo">Token de API (X-API-Token)</span>
+            <input id="token" type="text" placeholder="dev-token-sentinela" autocomplete="off" />
+          </label>
+        </div>
+        <div class="acoes">
+          <button id="testar" class="botao" type="button">Testar conexão</button>
+          <button id="sincronizar" class="botao" type="button">Sincronizar regras agora</button>
+          <p id="resultado-conexao" class="resultado" role="status"></p>
+        </div>
+      </section>
+
+      <section class="secao">
+        <div class="secao-titulo">
+          <span class="numero">02</span>
+          <div>
+            <h2>Identificação</h2>
+            <p>Esses campos aparecem nos alertas de auditoria. O colaborador é opcional.</p>
+          </div>
+        </div>
+        <div class="grade">
+          <label class="campo">
+            <span class="rotulo">Departamento</span>
+            <input id="departamento" type="text" list="lista-areas" placeholder="Ex.: RH" />
+            <datalist id="lista-areas"></datalist>
+          </label>
+          <label class="campo">
+            <span class="rotulo">Identificador do colaborador (opcional)</span>
+            <input id="colaborador" type="text" placeholder="Deixe vazio para anônimo" />
+          </label>
+        </div>
+        <p class="dica">
+          Se o departamento ficar vazio, o alerta é registrado como “Não informado”.
+        </p>
+      </section>
+
+      <section class="secao">
+        <div class="secao-titulo">
+          <span class="numero">03</span>
+          <div>
+            <h2>Monitoramento</h2>
+            <p>Desative temporariamente ou selecione os sites onde o aviso deve aparecer.</p>
+          </div>
+        </div>
+
+        <label class="linha-opcao">
+          <span>
+            <strong>Ativar monitoramento</strong>
+            <span class="dica">Analisa texto, colagens e anexos localmente enquanto você digita.</span>
+          </span>
+          <span class="switch">
+            <input id="ativo" type="checkbox" />
+            <span class="trilho"><span class="bolinha"></span></span>
+          </span>
+        </label>
+
+        <div class="sites" id="sites"></div>
+      </section>
+
+      <section class="secao">
+        <div class="secao-titulo">
+          <span class="numero">04</span>
+          <div>
+            <h2>Cache e fila offline</h2>
+            <p>As regras são sincronizadas a cada 5 minutos. Alertas sem servidor ficam na fila.</p>
+          </div>
+        </div>
+
+        <dl class="resumo" id="resumo">
+          <div><dt>Regras em cache</dt><dd id="regras">0</dd></div>
+          <div><dt>Última sincronização</dt><dd id="sincronizacao">nunca</dd></div>
+          <div><dt>Alertas na fila</dt><dd id="fila">0</dd></div>
+        </dl>
+
+        <div class="acoes">
+          <button id="reenviar" class="botao" type="button">Reenviar fila</button>
+          <button id="limpar-fila" class="botao perigo" type="button">Limpar fila</button>
+          <p id="resultado-fila" class="resultado" role="status"></p>
+        </div>
+      </section>
+
+      <div class="barra-salvar">
+        <p id="resultado-salvar" class="resultado" role="status"></p>
+        <button id="salvar" class="botao primario" type="button">Salvar configurações</button>
+      </div>
+
+      <p class="nota">
+        A extensão lê o campo de texto e os anexos (imagens e PDFs) das IAs monitoradas. O
+        conteúdo analisado nunca é gravado nem transmitido: o alerta contém somente site,
+        departamento, nível de risco, tipos detectados, origem e a ação do colaborador.
+      </p>
+    </main>
+
+    <script src="options.js" defer></script>
+  </body>
+</html>
