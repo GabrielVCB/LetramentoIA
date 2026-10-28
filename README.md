@@ -258,8 +258,9 @@ extensão (Manifest V3) e as mesmas APIs.
 ### Configuração (igual nos dois)
 
 5. Preencha:
-   - **URL do servidor**: `http://localhost:5000` na sua máquina, ou o endereço da nuvem
-     (ex.: `https://sua-empresa.onrender.com`).
+   - **URL do servidor**: já vem preenchida com o endereço do servidor da empresa
+     (`https://sentinela-r7ge.onrender.com`). Só troque por `http://localhost:5000` se for
+     testar na própria máquina.
    - **Código de instalação**: deixe vazio quando o servidor estiver na sua máquina. Na
      nuvem, cole o código que aparece no painel em **06 · Instalação**.
    - **Departamento**: ex. `RH`.
@@ -453,8 +454,9 @@ gratuitas por mês** da Render — o suficiente para um único serviço Free o m
 
 ### 4. Instalar a extensão nos computadores
 
-Nas Opções da extensão de cada computador: cole o endereço e o código, escolha o
-departamento e clique em **Salvar** (aceite o pedido de permissão do navegador) →
+O endereço do servidor já vem preenchido de fábrica (`https://sentinela-r7ge.onrender.com`,
+definido em `extensao/background.js`). Nas Opções da extensão de cada computador: cole
+apenas o **código de instalação**, escolha o departamento e clique em **Salvar** →
 **Testar conexão**.
 
 ### O que o `render.yaml` já configura

@@ -17,6 +17,20 @@ from datetime import datetime
 
 from werkzeug.security import generate_password_hash
 
+# O CLI da Neon grava a string de conexão em .env.local (ou .env) na raiz do
+# projeto. Se o python-dotenv estiver instalado, esses arquivos são lidos antes
+# de escolher o banco. Valores já definidos no ambiente têm prioridade, então na
+# Render nada muda. Sem o pacote, o servidor segue funcionando normalmente.
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - dependência opcional
+    load_dotenv = None
+
+if load_dotenv is not None:
+    _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for _arquivo in (".env.local", ".env"):
+        load_dotenv(os.path.join(_RAIZ, _arquivo), override=False)
+
 CAMINHO_PADRAO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sentinela.db")
 
 # Banco externo da nuvem. Aceita também o nome DATABASE_URL, usado por vários

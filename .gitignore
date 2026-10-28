@@ -1,7 +1,9 @@
 .env.local
+.env
 node_modules
 dist
 src/convex/_generated
 servidor/*.db
 servidor/__pycache__/
 servidor/.venv/
+.neon

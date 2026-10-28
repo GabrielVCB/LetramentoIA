@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const NOME_ZIP = "sentinela-projeto.zip";
 // A versão na URL evita que o navegador entregue um ZIP antigo em cache.
-const VERSAO_ZIP = "2.3.0";
+const VERSAO_ZIP = "2.4.0";
 const CAMINHO_ZIP = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/sentinela-projeto.zip?v=${VERSAO_ZIP}`;
 
 type Estado = "ocioso" | "baixando" | "pronto";

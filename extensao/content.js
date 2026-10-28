@@ -126,7 +126,7 @@
   };
 
   var CONFIGURACAO_PADRAO = {
-    serverUrl: "http://localhost:5000",
+    serverUrl: "https://sentinela-r7ge.onrender.com",
     departamento: "",
     colaborador: "",
     monitoramentoAtivo: true,

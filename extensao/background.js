@@ -17,8 +17,14 @@ const LIMITE_TEXTO_ANEXO = 60000;
 const TIMEOUT_MS = 6000;
 const TENTATIVAS = 2;
 
+// Endereço do servidor da empresa. Fica fixo aqui para que uma instalação nova
+// já nasça apontada para a nuvem, sem ninguém precisar digitar o endereço.
+// Para testar na própria máquina, basta trocar por http://localhost:5000 nas
+// Opções da extensão.
+const SERVIDOR_PADRAO = "https://sentinela-r7ge.onrender.com";
+
 const CONFIGURACAO_PADRAO = {
-  serverUrl: "http://localhost:5000",
+  serverUrl: SERVIDOR_PADRAO,
   apiToken: "",
   departamento: "",
   colaborador: "",
@@ -38,6 +44,7 @@ const CHAVES = {
   cache: "cacheConfig",
   status: "statusConexao",
   filaAntiga: "filaAlertas",
+  migracaoServidor: "migracaoServidorNuvem",
 };
 
 // ---------------------------------------------------------------------------
@@ -383,9 +390,26 @@ chrome.runtime.onMessage.addListener(function (mensagem, remetente, responder) {
 // Ciclo de vida
 // ---------------------------------------------------------------------------
 
+/**
+ * Quem já tinha a extensão salva com o padrão antigo (localhost) é movido uma
+ * única vez para o servidor da empresa, para não continuar enviando alertas
+ * para a própria máquina. A marca fica gravada: se a pessoa voltar a usar
+ * http://localhost:5000 de propósito, o valor dela é respeitado.
+ */
+async function migrarServidorPadrao() {
+  if (await lerArmazenado(CHAVES.migracaoServidor, false)) return;
+  const salva = await lerArmazenado(CHAVES.configuracao, null);
+  const endereco = String((salva && salva.serverUrl) || "").trim();
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(endereco)) {
+    await salvarArmazenado(CHAVES.configuracao, { ...salva, serverUrl: SERVIDOR_PADRAO });
+  }
+  await salvarArmazenado(CHAVES.migracaoServidor, true);
+}
+
 chrome.runtime.onInstalled.addListener(async function () {
   const salva = await lerArmazenado(CHAVES.configuracao, null);
   if (!salva) await salvarArmazenado(CHAVES.configuracao, CONFIGURACAO_PADRAO);
+  await migrarServidorPadrao();
   // Versões antigas guardavam alertas numa fila; a 2.1 envia direto.
   await chrome.storage.local.remove(CHAVES.filaAntiga);
   await sincronizarConfig(true);
