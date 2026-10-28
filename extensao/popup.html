@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sentinela</title>
+    <link rel="stylesheet" href="estilos.css" />
+  </head>
+  <body class="popup">
+    <header class="popup-topo">
+      <div>
+        <p class="marca">Sentinela</p>
+        <p class="micro">governança de ia</p>
+      </div>
+      <span id="status-ponto" class="ponto-status" aria-hidden="true"></span>
+    </header>
+
+    <section class="bloco">
+      <div class="linha">
+        <span class="rotulo">Monitoramento</span>
+        <label class="switch">
+          <input id="monitoramento" type="checkbox" />
+          <span class="trilho"><span class="bolinha"></span></span>
+        </label>
+      </div>
+      <p id="status-texto" class="micro">Carregando…</p>
+    </section>
+
+    <section class="bloco">
+      <div class="linha">
+        <span class="rotulo">Departamento</span>
+        <span id="departamento" class="valor">—</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Colaborador</span>
+        <span id="colaborador" class="valor">anônimo</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Servidor</span>
+        <span id="servidor" class="valor truncar">—</span>
+      </div>
+    </section>
+
+    <section class="bloco">
+      <div class="linha">
+        <span class="rotulo">Regras em cache</span>
+        <span id="regras" class="valor">0</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Última sincronização</span>
+        <span id="sincronizacao" class="valor">—</span>
+      </div>
+    </section>
+
+    <div class="acoes-popup">
+      <button id="testar" class="botao" type="button">Testar conexão</button>
+      <button id="opcoes" class="botao primario" type="button">Opções</button>
+    </div>
+
+    <p class="nota">O texto digitado nunca sai do navegador. Apenas o alerta é enviado.</p>
+
+    <script src="popup.js" defer></script>
+  </body>
+</html>

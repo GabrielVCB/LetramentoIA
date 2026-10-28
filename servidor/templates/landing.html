@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% block titulo %}Sentinela · o aviso chega antes do envio{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}" />
+{% endblock %}
+
+{% block corpo %}
+<div class="landing">
+  <header class="lp-topo">
+    <div class="lp-limite lp-topo-linha">
+      <a class="marca-bloco" href="{{ url_for('landing') }}" aria-label="Sentinela, página inicial">
+        <span class="marca">Sentinela</span>
+        <span class="micro">governança de ia</span>
+      </a>
+
+      <nav class="lp-nav" aria-label="Navegação principal">
+        <a href="#principio">Princípio</a>
+        <a href="#matriz">Matriz de risco</a>
+        <a href="#funciona">Como funciona</a>
+        <a href="#letramento">Letramento</a>
+      </nav>
+
+      <a class="botao" href="{{ url_for('login') }}">Entrar</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="lp-hero lp-limite">
+      <div class="lp-hero-texto">
+        <p class="rotulo">Governança de dados · uso de IA</p>
+        <h1>O que é confidencial não deveria virar <em>prompt</em>.</h1>
+        <p class="lp-entrada">
+          Um painel de governança e letramento em IA para reduzir o vazamento de informações
+          corporativas. A extensão lê o que o colaborador digita no ChatGPT, Gemini, Claude e
+          Copilot — e avisa antes do envio. O texto nunca sai da máquina.
+        </p>
+
+        <div class="lp-acoes">
+          <a class="botao primario" href="{{ url_for('login') }}">
+            Entrar no painel
+            <span aria-hidden="true">→</span>
+          </a>
+          <a class="botao" href="#matriz">Ver a matriz de risco</a>
+        </div>
+
+        <dl class="lp-numeros">
+          <div><dt>Sites</dt><dd>05</dd></div>
+          <div><dt>Áreas</dt><dd>{{ "%02d"|format(areas|length) }}</dd></div>
+          <div><dt>Texto enviado</dt><dd>00</dd></div>
+        </dl>
+      </div>
+
+      <div class="lp-demo">
+        <div class="lp-demo-caixa" id="demo-caixa">
+          <div class="lp-demo-topo">
+            <span class="lp-demo-site"><span class="lp-ponto" aria-hidden="true"></span> chatgpt.com</span>
+            <span class="rotulo">prévia · análise local</span>
+          </div>
+
+          <label class="lp-demo-campo">
+            <span class="lp-sr">Texto de demonstração</span>
+            <textarea id="demo-texto" rows="4" spellcheck="false">Preciso revisar o orçamento interno do trimestre e o cronograma do projeto Atlas antes da reunião de segunda.</textarea>
+          </label>
+
+          <div class="lp-demo-aviso" id="demo-aviso" aria-live="polite">
+            <div class="lp-demo-aviso-topo">
+              <span class="lp-demo-nivel" id="demo-nivel">Risco médio</span>
+              <span class="rotulo" id="demo-contagem">—</span>
+            </div>
+            <ul class="lp-demo-tipos" id="demo-tipos"></ul>
+            <p class="lp-demo-mensagem" id="demo-mensagem"></p>
+          </div>
+
+          <div class="lp-demo-rodape">
+            <span class="rotulo">Testar</span>
+            <div class="lp-demo-exemplos">
+              <button type="button" data-texto="O CPF do novo analista é 529.982.247-25. Pode conferir os dados para o contrato?">CPF</button>
+              <button type="button" data-texto="Estou com erro na API. Minha chave é sk-proj-8fJ2kLm9Qr4Tz7Xb1Nc6Vd3.">Token</button>
+              <button type="button" data-texto="My password is Hunter2!">Password</button>
+              <button type="button" data-texto="Pode revisar a redação deste e-mail de agradecimento para o cliente?">Sem risco</button>
+            </div>
+            <span class="lp-demo-nota">nada é gravado aqui</span>
+          </div>
+        </div>
+
+        <p class="lp-demo-observacao">
+          <span aria-hidden="true"></span>
+          A classificação vem da matriz editável no painel. Esta prévia usa os mesmos detectores
+          da extensão, rodando no seu navegador.
+        </p>
+      </div>
+    </section>
+
+    <div class="lp-faixa">
+      <div class="lp-limite lp-faixa-linha">
+        <span class="rotulo">Monitorado</span>
+        <div class="lp-faixa-sites">
+          <span>chatgpt.com</span><i>/</i>
+          <span>chat.openai.com</span><i>/</i>
+          <span>gemini.google.com</span><i>/</i>
+          <span>claude.ai</span><i>/</i>
+          <span>copilot.cloud.microsoft</span>
+        </div>
+        <span class="rotulo">análise local</span>
+      </div>
+    </div>
+
+    <section class="lp-secao lp-limite lp-problema">
+      <div class="lp-problema-texto">
+        <p class="rotulo">01 — O problema</p>
+        <h2>A política existe.<br />O hábito não acompanha.</h2>
+        <p class="lp-entrada">
+          Ferramentas de IA públicas são úteis e vão continuar sendo usadas. O que precisa mudar
+          é o que entra nelas.
+        </p>
+      </div>
+
+      <ol class="lp-lista-numerada">
+        <li>
+          <span class="lp-num">01</span>
+          <div>
+            <h3>A IA pública virou atalho</h3>
+            <p>Reescrever e-mail, depurar código, resumir contrato. A ferramenta certa, muitas vezes com o dado errado dentro.</p>
+          </div>
+        </li>
+        <li>
+          <span class="lp-num">02</span>
+          <div>
+            <h3>O vazamento não parece vazamento</h3>
+            <p>Um CPF no meio de uma frase, um token colado para pedir ajuda. Nada disso aciona o antivírus — nem o jurídico.</p>
+          </div>
+        </li>
+        <li>
+          <span class="lp-num">03</span>
+          <div>
+            <h3>Sem registro, não há gestão</h3>
+            <p>Quem enviou, com que risco, em qual área? Sem auditoria, a política de uso de IA fica só no papel.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="lp-faixa-principio" id="principio">
+      <div class="lp-limite lp-secao">
+        <div class="lp-cabecalho-duplo">
+          <div>
+            <p class="rotulo">02 — Princípio</p>
+            <h2>Vigilância sobre o risco, não sobre a conversa.</h2>
+          </div>
+          <p>
+            O sistema foi desenhado para que o conteúdo sensível nunca atravesse a fronteira do
+            navegador.
+          </p>
+        </div>
+
+        <div class="lp-tres-colunas">
+          <div>
+            <p class="lp-num">01</p>
+            <h3>Lê no navegador</h3>
+            <p>O content script observa o campo de texto e aplica os detectores localmente. Nenhum keystroke é transmitido.</p>
+          </div>
+          <div>
+            <p class="lp-num">02</p>
+            <h3>Classifica pelo contexto</h3>
+            <p>Cada regra pertence a uma área e a um nível. A maior gravidade encontrada define o alerta: alto, médio ou baixo.</p>
+          </div>
+          <div>
+            <p class="lp-num">03</p>
+            <h3>Registra só o alerta</h3>
+            <p>Site, departamento, nível, tipos detectados, origem e a decisão de enviar ou cancelar. Sem texto, sem histórico de chat.</p>
+          </div>
+        </div>
+
+        <blockquote>
+          “O texto não sai da máquina. Nem para o servidor da própria empresa.”
+        </blockquote>
+      </div>
+    </section>
+
+    <section class="lp-secao lp-limite" id="matriz">
+      <div class="lp-cabecalho-duplo">
+        <div>
+          <p class="rotulo">03 — Matriz de risco</p>
+          <h2>{{ areas|length }} áreas, uma escala só.</h2>
+        </div>
+        <p>
+          A classificação é sempre a mesma: um item de risco alto eleva a mensagem a risco alto.
+          Sem itens altos, um médio eleva a risco médio. As regras são bilíngues.
+        </p>
+      </div>
+
+      <div class="lp-matriz-rolagem">
+        <table class="lp-matriz">
+          <thead>
+            <tr>
+              <th class="rotulo">Área</th>
+              <th class="rotulo"><span class="lp-risco-dot baixo"></span> Baixo</th>
+              <th class="rotulo"><span class="lp-risco-dot medio"></span> Médio</th>
+              <th class="rotulo"><span class="lp-risco-dot alto"></span> Alto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for area in areas %}
+            <tr>
+              <td>
+                <span class="lp-area-nome">{{ area.nome }}</span>
+                <span class="lp-area-desc">{{ area.descricao }}</span>
+              </td>
+              {% for nivel in ["baixo", "medio", "alto"] %}
+              <td>
+                <ul>
+                  {% for regra in area.regras if regra.risco == nivel %}
+                  <li>{{ regra.nome }}</li>
+                  {% endfor %}
+                </ul>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="lp-nota-matriz">
+        Regras editáveis no painel · a extensão sincroniza a matriz a cada cinco minutos.
+      </p>
+    </section>
+
+    <section class="lp-faixa-principio" id="funciona">
+      <div class="lp-limite lp-secao">
+        <div class="lp-cabecalho-duplo">
+          <div>
+            <p class="rotulo">04 — Como funciona</p>
+            <h2>Do campo de texto à auditoria.</h2>
+          </div>
+          <p>
+            Extensão Manifest V3 (Chrome ou Edge), servidor Flask com banco Postgres na nuvem
+            (ou SQLite na própria máquina) e painel servido pela mesma aplicação.
+          </p>
+        </div>
+
+        <div class="lp-etapas">
+          <div>
+            <p class="lp-num">01</p>
+            <h3>Instalação sem loja</h3>
+            <p>A extensão entra no Chrome ou no Edge em modo de desenvolvedor, sem loja e sem depender de nenhum serviço externo.</p>
+          </div>
+          <div>
+            <p class="lp-num">02</p>
+            <h3>Leitura no campo</h3>
+            <p>MutationObserver encontra a caixa de texto de cada IA. Texto, colagens e anexos são analisados no navegador.</p>
+          </div>
+          <div>
+            <p class="lp-num">03</p>
+            <h3>Aviso no momento certo</h3>
+            <p>Um painel translúcido em Shadow DOM classifica o risco e explica o que fazer. Em risco alto, o envio pede confirmação.</p>
+          </div>
+          <div>
+            <p class="lp-num">04</p>
+            <h3>Auditoria sem conteúdo</h3>
+            <p>Só o alerta chega ao servidor: site, departamento, nível, tipos, origem e a decisão do colaborador.</p>
+          </div>
+        </div>
+
+        <div class="lp-recursos">
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">Imagem</span>
+            <h3>Prints e imagens coladas</h3>
+            <p>O OCR roda em uma página offscreen da própria extensão. O texto reconhecido é classificado e descartado; a imagem não é enviada.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">PDF</span>
+            <h3>Arquivos anexados</h3>
+            <p>A extração de texto de PDF acontece localmente, página por página, no mesmo pipeline de análise.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">Colagem</span>
+            <h3>Blocos inteiros</h3>
+            <p>O evento de colagem é lido antes do site: blocos longos de texto, listas ou código ganham classificação própria.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">PT / EN</span>
+            <h3>Regras bilíngues</h3>
+            <p>“Senha” e “password”, “contrato” e “contract”, “orçamento” e “budget” acionam a mesma regra.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-letramento" id="letramento">
+      <div class="lp-limite lp-letramento-grade">
+        <div>
+          <p class="rotulo lp-rotulo-claro">05 — Letramento</p>
+          <h2>“Enviou mesmo assim” é o número que importa.</h2>
+          <p class="lp-entrada">
+            O painel compara envios e cancelamentos por departamento. Não para punir, mas para
+            mostrar onde o aviso ainda não está funcionando — e onde o letramento precisa ser
+            reforçado.
+          </p>
+          <div class="lp-letramento-lista">
+            <span>Relatórios com filtros de data, área e nível</span>
+            <span>Retenção configurável</span>
+            <span>Exportação em CSV</span>
+          </div>
+        </div>
+        <div class="lp-letramento-numero">
+          <p class="lp-big">30%</p>
+          <p>
+            de alertas em risco alto, com no mínimo três registros no departamento, indicam um
+            gargalo de letramento. O limiar é configurável no painel.
+          </p>
+          <div class="lp-como-ler">
+            <p class="rotulo lp-rotulo-claro">Como ler</p>
+            <p>
+              Muitos cancelamentos indicam que o aviso chegou antes do envio. Muitos envios em
+              risco alto indicam que o aviso precisa de contexto, treinamento ou uma alternativa
+              corporativa.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-limite lp-cta">
+      <p class="rotulo">Painel administrativo</p>
+      <h2>Comece pelo painel. Depois instale a extensão.</h2>
+      <p class="lp-entrada">
+        Regras, áreas, mensagens educativas, auditoria e relatórios de letramento em um só lugar.
+      </p>
+      <div class="lp-acoes">
+        <a class="botao primario" href="{{ url_for('login') }}">Entrar no painel <span aria-hidden="true">→</span></a>
+        <a class="botao" href="#funciona">Como funciona</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="lp-rodape">
+    <div class="lp-limite lp-rodape-grade">
+      <div>
+        <a class="marca-bloco" href="{{ url_for('landing') }}">
+          <span class="marca">Sentinela</span>
+          <span class="micro">governança de ia</span>
+        </a>
+        <p class="lp-rodape-texto">
+          Painel de governança, auditoria e letramento em IA. Extensão Chrome MV3 + servidor
+          Flask, na própria máquina ou publicado na nuvem.
+        </p>
+      </div>
+
+      <div class="lp-rodape-colunas">
+        <div>
+          <span class="rotulo">Painel</span>
+          <a href="{{ url_for('login') }}">Entrar</a>
+          <a href="{{ url_for('login') }}">Visão geral</a>
+          <a href="#matriz">Matriz de risco</a>
+        </div>
+        <div>
+          <span class="rotulo">Extensão</span>
+          <a href="#funciona">Como funciona</a>
+          <a href="#funciona">Prints e PDFs</a>
+          <a href="#principio">Privacidade</a>
+        </div>
+        <p>Nenhum texto de conversa é armazenado neste sistema.</p>
+      </div>
+    </div>
+    <div class="lp-rodape-base">
+      <div class="lp-limite">
+        <span>© {{ ano }} Sentinela</span>
+        <span class="lp-mono">Chrome MV3 · Flask · Postgres · nuvem ou local</span>
+      </div>
+    </div>
+  </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='detectores.js') }}"></script>
+<script src="{{ url_for('static', filename='landing.js') }}"></script>
+{% endblock %}
