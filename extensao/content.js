@@ -169,6 +169,8 @@
     observador: null,
     localizarTimer: null,
     posicaoTimer: null,
+    vigias: [],
+    encerrado: false,
   };
 
   // -------------------------------------------------------------------------
@@ -237,7 +239,48 @@
   // Inicialização
   // -------------------------------------------------------------------------
 
+  /**
+   * A extensão pode ser atualizada (ou desligada) com a página já aberta. Nesse
+   * caso o script antigo continua na página, mas perde o contato com a extensão
+   * — o navegador responde "Extension context invalidated". Em vez de repetir
+   * erro no console, o monitoramento é encerrado com um aviso único.
+   */
+  function contextoAtivo() {
+    try {
+      return Boolean(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (erro) {
+      return false;
+    }
+  }
+
+  function encerrarPorAtualizacao() {
+    if (estado.encerrado) return;
+    estado.encerrado = true;
+    if (estado.observador) {
+      estado.observador.disconnect();
+      estado.observador = null;
+    }
+    estado.vigias.forEach(function (id) {
+      clearInterval(id);
+    });
+    estado.vigias = [];
+    if (estado.timer) {
+      clearTimeout(estado.timer);
+      estado.timer = null;
+    }
+    esconderInterface();
+    console.info(
+      "[Sentinela] extensão atualizada. Recarregue a página para reativar o monitoramento.",
+    );
+  }
+
+  function ehContextoInvalido(erro) {
+    var texto = String((erro && erro.message) || erro || "").toLowerCase();
+    return texto.indexOf("context invalidated") >= 0 || texto.indexOf("message port closed") >= 0;
+  }
+
   function iniciar() {
+    if (!contextoAtivo()) return;
     estado.site = detectarSite();
     if (!estado.site) return;
 
@@ -256,6 +299,7 @@
   }
 
   function solicitarConfig() {
+    if (!contextoAtivo()) return;
     try {
       chrome.runtime.sendMessage({ tipo: "OBTER_CONFIG" }, function (resposta) {
         if (chrome.runtime.lastError) return;
@@ -289,11 +333,11 @@
     });
 
     // Alguns sites montam o editor apenas após interação do usuário.
-    setInterval(localizarCampo, 1500);
+    estado.vigias.push(setInterval(localizarCampo, 1500));
     // Gemini e Copilot às vezes trocam o conteúdo do editor sem disparar
     // "input" na janela. Este vigia curto compara o texto a cada 300 ms e
     // garante que colar, apagar e substituir o prompt sejam vistos na hora.
-    setInterval(vigiarTexto, INTERVALO_VIGIA);
+    estado.vigias.push(setInterval(vigiarTexto, INTERVALO_VIGIA));
     window.addEventListener("resize", agendarPosicao, { passive: true });
     window.addEventListener("scroll", agendarPosicao, { passive: true });
   }
@@ -515,6 +559,7 @@
   }
 
   function analisar() {
+    if (estado.encerrado) return;
     clearTimeout(estado.timer);
     estado.analisando = false;
 
@@ -805,6 +850,7 @@
   }
 
   function renderizarBanner() {
+    if (estado.encerrado) return;
     if (!estado.raizBanner) return;
 
     if (!deveMostrarBanner()) {
@@ -1574,16 +1620,32 @@
       acao: acao,
     };
 
+    if (!contextoAtivo()) {
+      encerrarPorAtualizacao();
+      return;
+    }
+
+    var enviou = false;
     try {
       chrome.runtime.sendMessage({ tipo: "REGISTRAR_ALERTA", alerta: alerta }, function (resposta) {
-        if (chrome.runtime.lastError) return;
+        if (chrome.runtime.lastError) {
+          if (ehContextoInvalido(chrome.runtime.lastError)) encerrarPorAtualizacao();
+          return;
+        }
         if (resposta && resposta.ok === false) {
           console.info("[Sentinela] servidor indisponível: alerta não registrado.");
         }
       });
+      enviou = true;
     } catch (erro) {
-      console.warn("[Sentinela] não foi possível contatar o service worker.", erro);
+      if (ehContextoInvalido(erro)) {
+        encerrarPorAtualizacao();
+        return;
+      }
+      console.info("[Sentinela] não foi possível contatar o service worker.", erro);
     }
+
+    return enviou;
   }
 
   // -------------------------------------------------------------------------
@@ -1591,6 +1653,7 @@
   // -------------------------------------------------------------------------
 
   chrome.storage.onChanged.addListener(function (mudancas, area) {
+    if (estado.encerrado || !contextoAtivo()) return;
     if (area !== "local") return;
 
     if (mudancas.configuracao) {

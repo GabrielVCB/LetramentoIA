@@ -75,6 +75,10 @@ O caminho até o uso real é curto:
 3. `app.py` entrega as regras para a extensão em `/api/config` e mostra a matriz no painel;
 4. a extensão sincroniza essa cópia a cada cinco minutos e classifica o texto digitado.
 
+O painel usa exatamente as mesmas quatro funções: criar, editar ou excluir uma regra ali chama
+`criar()`, `atualizar()` ou `excluir()` do `crud.py`, e a lista em memória e o banco andam
+juntos — nenhuma operação de regra acontece fora do CRUD.
+
 Por isso, editar `regras.py` só chega ao banco na próxima inicialização do servidor, e uma
 regra editada ou criada no painel não é sobrescrita por esse processo.
 

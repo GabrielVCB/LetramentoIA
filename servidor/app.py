@@ -1462,6 +1462,15 @@ def api_criar_regra():
             ),
         )
         conexao_aberta.commit()
+        # A regra também entra na lista do crud.py, que é o cadastro de origem.
+        db.criar_na_memoria(
+            dados["nome"],
+            db.nome_da_area(conexao_aberta, dados["area_id"]),
+            dados["tipo"],
+            dados["padrao"],
+            dados["risco"],
+            bool(dados["ativo"]),
+        )
         return jsonify({"id": novo_id, "mensagem": "Regra criada."}), 201
     finally:
         conexao_aberta.close()
@@ -1473,9 +1482,16 @@ def api_atualizar_regra(regra_id: int):
     dados = validar_regra(ler_corpo())
     conexao_aberta = conexao()
     try:
-        if not conexao_aberta.execute(
-            "SELECT id FROM regras WHERE id = ?", (regra_id,)
-        ).fetchone():
+        anterior = conexao_aberta.execute(
+            """
+            SELECT r.nome, a.nome AS area
+            FROM regras r
+            JOIN areas a ON a.id = r.area_id
+            WHERE r.id = ?
+            """,
+            (regra_id,),
+        ).fetchone()
+        if anterior is None:
             return jsonify({"erro": "Regra não encontrada."}), 404
         if not area_existe(conexao_aberta, dados["area_id"]):
             raise ErroValidacao("Selecione uma área válida.")
@@ -1496,6 +1512,18 @@ def api_atualizar_regra(regra_id: int):
             ),
         )
         conexao_aberta.commit()
+        # Mesma edição na lista do crud.py: a regra é procurada pelo nome e
+        # pela área antigos e sai de lá já com os dados novos.
+        db.atualizar_na_memoria(
+            anterior["nome"],
+            anterior["area"],
+            dados["nome"],
+            db.nome_da_area(conexao_aberta, dados["area_id"]),
+            dados["tipo"],
+            dados["padrao"],
+            dados["risco"],
+            bool(dados["ativo"]),
+        )
         return jsonify({"mensagem": "Regra atualizada."})
     finally:
         conexao_aberta.close()
@@ -1506,10 +1534,23 @@ def api_atualizar_regra(regra_id: int):
 def api_remover_regra(regra_id: int):
     conexao_aberta = conexao()
     try:
+        anterior = conexao_aberta.execute(
+            """
+            SELECT r.nome, a.nome AS area
+            FROM regras r
+            JOIN areas a ON a.id = r.area_id
+            WHERE r.id = ?
+            """,
+            (regra_id,),
+        ).fetchone()
+        if anterior is None:
+            return jsonify({"erro": "Regra não encontrada."}), 404
         cursor = conexao_aberta.execute("DELETE FROM regras WHERE id = ?", (regra_id,))
         conexao_aberta.commit()
         if cursor.rowcount == 0:
             return jsonify({"erro": "Regra não encontrada."}), 404
+        # A regra também sai da lista do crud.py.
+        db.excluir_da_memoria(anterior["nome"], anterior["area"])
         return jsonify({"mensagem": "Regra removida."})
     finally:
         conexao_aberta.close()

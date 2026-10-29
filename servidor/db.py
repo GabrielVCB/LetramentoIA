@@ -317,6 +317,61 @@ def _semear_matriz(conexao_aberta: _Conexao, forcar_atualizacao: bool) -> None:
                 )
 
 
+# ---------------------------------------------------------------------------
+# Espelho em memória do crud.py
+#
+# As regras nascem em regras.py e ficam na lista de crud.py enquanto o servidor
+# está rodando. O banco é a cópia publicada dessa lista. Quando o painel cria,
+# edita ou exclui uma regra, a mesma operação é feita primeiro na lista do
+# crud.py e só depois gravada no banco, para as duas nunca divergirem.
+# ---------------------------------------------------------------------------
+
+
+def regra_em_memoria(nome: str, area: str):
+    """Devolve a regra da lista do crud.py com este nome e esta área."""
+    for regra in crud.listar():
+        if regra["nome"] == nome and regra["area"] == area:
+            return regra
+    return None
+
+
+def criar_na_memoria(nome, area, tipo, padrao, risco, ativo=True):
+    """CRIA na lista do crud.py a regra que o painel acabou de cadastrar."""
+    return crud.criar(nome, area, tipo, padrao, risco, bool(ativo))
+
+
+def atualizar_na_memoria(
+    nome_anterior, area_anterior, nome, area, tipo, padrao, risco, ativo=True
+):
+    """ATUALIZA na lista do crud.py a regra que o painel editou.
+
+    Se a regra não estiver na memória (criada no painel depois que o servidor
+    subiu), ela é criada, porque a lista é o cadastro e o banco é a cópia.
+    """
+    existente = regra_em_memoria(nome_anterior, area_anterior)
+    if existente is None:
+        return criar_na_memoria(nome, area, tipo, padrao, risco, ativo)
+    return crud.atualizar(
+        existente["id"], nome, area, tipo, padrao, risco, bool(ativo)
+    )
+
+
+def excluir_da_memoria(nome: str, area: str) -> bool:
+    """EXCLUI da lista do crud.py a regra que o painel removeu."""
+    existente = regra_em_memoria(nome, area)
+    if existente is None:
+        return False
+    return crud.excluir(existente["id"])
+
+
+def nome_da_area(conexao_aberta: _Conexao, area_id: int) -> str:
+    """Nome da área usada na lista do crud.py (que guarda o nome, não o id)."""
+    linha = conexao_aberta.execute(
+        "SELECT nome FROM areas WHERE id = ?", (area_id,)
+    ).fetchone()
+    return linha["nome"] if linha else ""
+
+
 def inicializar_banco(usuario: str, senha: str) -> None:
     """Cria o esquema, sincroniza a matriz e garante o administrador inicial."""
     conexao_aberta = conectar()
