@@ -205,6 +205,27 @@ async function extrairAnexo(anexo) {
 // Sincronização de configuração (cache para quando o servidor estiver off)
 // ---------------------------------------------------------------------------
 
+/** Nomes de área citados pelas regras, sem repetir. */
+function areasDasRegras(regras) {
+  const vistos = [];
+  (Array.isArray(regras) ? regras : []).forEach(function (regra) {
+    const nome = regra && regra.area ? String(regra.area).trim() : "";
+    if (nome && vistos.indexOf(nome) < 0) vistos.push(nome);
+  });
+  return vistos;
+}
+
+/**
+ * A lista de departamentos vem de `areas` em /api/config. Versões anteriores
+ * do servidor não mandavam esse campo, então a lista também é montada a partir
+ * da área de cada regra — o seletor funciona com qualquer versão publicada.
+ */
+function areasDaConfiguracao(config) {
+  if (!config) return [];
+  if (Array.isArray(config.areas) && config.areas.length) return config.areas.slice();
+  return areasDasRegras(config.regras);
+}
+
 async function sincronizarConfig(forcar) {
   const cache = await lerArmazenado(CHAVES.cache, null);
 
@@ -231,7 +252,7 @@ async function sincronizarConfig(forcar) {
     const novoCache = {
       regras: resposta.regras,
       mensagens: resposta.mensagens,
-      areas: Array.isArray(resposta.areas) ? resposta.areas : [],
+      areas: areasDaConfiguracao(resposta),
       atualizadoEm: Date.now(),
     };
     await salvarArmazenado(CHAVES.cache, novoCache);
@@ -403,7 +424,10 @@ chrome.runtime.onMessage.addListener(function (mensagem, remetente, responder) {
             ? {
                 totalRegras: cache.regras ? cache.regras.length : 0,
                 atualizadoEm: cache.atualizadoEm,
-                areas: Array.isArray(cache.areas) ? cache.areas : [],
+                areas:
+                  Array.isArray(cache.areas) && cache.areas.length
+                    ? cache.areas
+                    : areasDasRegras(cache.regras),
               }
             : null,
         });

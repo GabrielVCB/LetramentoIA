@@ -81,6 +81,16 @@ CORS(
 db.inicializar_banco(ADMIN_USUARIO, ADMIN_SENHA)
 
 
+@app.context_processor
+def variaveis_globais():
+    """Deixa a versão disponível em todos os templates.
+
+    Ela entra no endereço dos arquivos estáticos (?v=2.6), então o navegador não
+    reaproveita um painel.js ou um CSS de uma publicação anterior.
+    """
+    return {"versao": VERSAO}
+
+
 class ErroValidacao(Exception):
     """Erro de entrada do usuário, convertido em resposta 400."""
 

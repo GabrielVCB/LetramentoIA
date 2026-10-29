@@ -222,7 +222,8 @@ body.popup {
 }
 
 input[type="text"],
-input[type="url"] {
+input[type="url"],
+select {
   width: 100%;
   border: 1px solid var(--linha-forte);
   background: #fff;
@@ -233,8 +234,21 @@ input[type="url"] {
   border-radius: 0;
 }
 
+/* Seta discreta, no mesmo tom da borda, para o seletor seguir o visual dos
+   outros campos em vez do estilo nativo do navegador. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
 input[type="text"]:focus,
-input[type="url"]:focus {
+input[type="url"]:focus,
+select:focus {
   outline: none;
   border-color: var(--cinza);
 }

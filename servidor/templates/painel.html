@@ -589,5 +589,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='painel.js') }}" defer></script>
+<script src="{{ url_for('static', filename='painel.js') }}?v={{ versao }}" defer></script>
 {% endblock %}

@@ -118,6 +118,13 @@ function montarDepartamentos(areas, atual) {
   vazia.textContent = "Não informado";
   el.departamento.appendChild(vazia);
 
+  if (!lista.length) {
+    const aviso = document.createElement("option");
+    aviso.disabled = true;
+    aviso.textContent = "— salve o código para carregar as áreas —";
+    el.departamento.appendChild(aviso);
+  }
+
   lista.forEach(function (nome) {
     const opcao = document.createElement("option");
     opcao.value = nome;

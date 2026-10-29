@@ -2,7 +2,7 @@
 {% block titulo %}Sentinela · o aviso chega antes do envio{% endblock %}
 
 {% block estilos %}
-<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}?v={{ versao }}" />
 {% endblock %}
 
 {% block corpo %}
@@ -389,6 +389,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='detectores.js') }}"></script>
-<script src="{{ url_for('static', filename='landing.js') }}"></script>
+<script src="{{ url_for('static', filename='detectores.js') }}?v={{ versao }}"></script>
+<script src="{{ url_for('static', filename='landing.js') }}?v={{ versao }}"></script>
 {% endblock %}

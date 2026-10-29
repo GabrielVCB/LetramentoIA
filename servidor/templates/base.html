@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>{% block titulo %}Sentinela · Governança de IA{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='painel.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='painel.css') }}?v={{ versao }}" />
     {% block estilos %}{% endblock %}
   </head>
   <body>
