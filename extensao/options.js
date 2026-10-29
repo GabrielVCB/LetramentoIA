@@ -8,10 +8,10 @@ const SITES_DISPONIVEIS = [
   "claude.ai",
   "copilot.cloud.microsoft",
   "copilot.microsoft.com",
+  "copilot.com",
 ];
 
-// Endereço padrão: o servidor da empresa na nuvem. Trocar para
-// http://localhost:5000 apenas quando quiser testar na própria máquina.
+// Endereço padrão: o servidor da empresa na nuvem.
 const PADROES = {
   serverUrl: "https://sentinela-r7ge.onrender.com",
   apiToken: "",

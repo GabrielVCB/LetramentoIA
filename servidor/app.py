@@ -1,18 +1,18 @@
 """
-Sentinela — servidor Flask + banco (Postgres na nuvem, SQLite na máquina).
+Sentinela — servidor Flask na nuvem, com banco Postgres externo.
 
-Execução local (Windows/PowerShell):
-    python app.py
-
-Execução na nuvem (Render), com banco Postgres externo em SENTINELA_DB_URL:
+Execução (Render):
     gunicorn app:app
+
+O banco vem de SENTINELA_DB_URL (Neon/Supabase). Não existe modo local: o
+servidor não inicia sem essa variável.
 
 Rotas públicas:
     GET  /                   landing (primeira tela)
     GET  /login              formulário de acesso
     GET  /api/ping
-    GET  /api/config          (código de instalação quando o servidor é público)
-    POST /api/alertas         (código de instalação quando o servidor é público)
+    GET  /api/config          (exige o código de instalação)
+    POST /api/alertas         (exige o código de instalação)
 
 Painel (sessão):
     /painel, /logout
@@ -47,7 +47,7 @@ from werkzeug.security import check_password_hash
 import db
 import pdf
 
-VERSAO = "2.3.0"
+VERSAO = "2.6.0"
 
 # ---------------------------------------------------------------------------
 # Configuração (sempre por variáveis de ambiente, com padrão de desenvolvimento)
@@ -56,14 +56,14 @@ VERSAO = "2.3.0"
 ADMIN_USUARIO = os.environ.get("SENTINELA_ADMIN_USUARIO", "admin")
 ADMIN_SENHA = os.environ.get("SENTINELA_ADMIN_SENHA", "admin123")
 SECRET_KEY = os.environ.get("SENTINELA_SECRET_KEY", "dev-secret-mude-isto")
-PORTA = int(os.environ.get("PORT", "5000"))
 
 app = Flask(__name__)
 app.config.update(
     SECRET_KEY=SECRET_KEY,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=os.environ.get("SENTINELA_COOKIE_SEGURO", "0") == "1",
+    # Na nuvem o painel é servido por https; o cookie só trafega por https.
+    SESSION_COOKIE_SECURE=os.environ.get("SENTINELA_COOKIE_SEGURO", "1") == "1",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     MAX_CONTENT_LENGTH=256 * 1024,
 )
@@ -101,9 +101,6 @@ def agora_iso() -> str:
 # Código de instalação e IP de origem
 # ---------------------------------------------------------------------------
 
-ENDERECOS_LOCAIS = {"127.0.0.1", "::1", "::ffff:127.0.0.1", "localhost"}
-
-
 def ip_do_cliente() -> str:
     """IP de quem enviou o alerta. Atrás do proxy, o ProxyFix já resolveu isto."""
     endereco = (request.remote_addr or "").strip()
@@ -118,24 +115,8 @@ def token_esperado() -> str:
     return definido or db.token_api()
 
 
-def token_obrigatorio() -> bool:
-    """Na própria máquina o envio segue aberto; fora dela, exige o código.
-
-    SENTINELA_EXIGIR_TOKEN=1 força a exigência (útil em testes e em produção),
-    SENTINELA_EXIGIR_TOKEN=0 desliga (só use em rede confiável).
-    """
-    forcado = (os.environ.get("SENTINELA_EXIGIR_TOKEN") or "").strip().lower()
-    if forcado in ("1", "true", "sim"):
-        return True
-    if forcado in ("0", "false", "nao"):
-        return False
-    return ip_do_cliente() not in ENDERECOS_LOCAIS
-
-
 def conferir_token():
-    """Devolve uma resposta de erro ou None quando o código confere."""
-    if not token_obrigatorio():
-        return None
+    """Devolve uma resposta de erro ou None quando o código de instalação confere."""
     recebido = (request.headers.get("X-API-Token") or "").strip()
     esperado = token_esperado()
     if not recebido or not esperado or not hmac.compare_digest(recebido, esperado):
@@ -352,8 +333,6 @@ def api_ping():
             "ok": True,
             "mensagem": "Sentinela online.",
             "versao": VERSAO,
-            "token_obrigatorio": token_obrigatorio(),
-            "banco_externo": db.usando_postgres(),
             "hora": agora_iso(),
         }
     )
@@ -407,8 +386,8 @@ def api_config():
 @app.post("/api/alertas")
 @exigir_token_api
 def api_criar_alerta():
-    # Na própria máquina o envio é direto, sem código. Na nuvem, o código de
-    # instalação é conferido antes de qualquer gravação.
+    # O código de instalação já foi conferido por @exigir_token_api antes de
+    # qualquer gravação.
     corpo = ler_corpo()
     ip = ip_do_cliente()
 
@@ -1102,10 +1081,8 @@ def api_instalacao():
         {
             "url_base": url_base,
             "token": token_esperado(),
-            "token_obrigatorio": token_obrigatorio(),
             "endereco_visto": ip_do_cliente(),
             "versao": VERSAO,
-            "banco_externo": db.usando_postgres(),
         }
     )
 
@@ -1527,34 +1504,15 @@ def api_salvar_configuracoes():
 # Inicialização
 # ---------------------------------------------------------------------------
 
-def avisar_configuracao_padrao() -> None:
+def avisar_configuracao() -> None:
+    """Deixa no log da hospedagem o que ainda está com valor de exemplo."""
     if ADMIN_SENHA == "admin123":
         print("[AVISO] Senha inicial do painel é 'admin123'. Defina SENTINELA_ADMIN_SENHA.")
     if SECRET_KEY == "dev-secret-mude-isto":
         print("[AVISO] SECRET_KEY de desenvolvimento. Defina SENTINELA_SECRET_KEY.")
-    if os.environ.get("RENDER"):
-        print("[Sentinela] Rodando na nuvem: alertas exigem o código de instalação.")
-        if SECRET_KEY == "dev-secret-mude-isto":
-            print("[AVISO] Na nuvem a SECRET_KEY é obrigatória. Defina SENTINELA_SECRET_KEY.")
-        if not db.usando_postgres():
-            print(
-                "[AVISO] Sem SENTINELA_DB_URL o servidor usa SQLite, e na nuvem esse "
-                "arquivo é apagado a cada reinício. Defina o banco externo."
-            )
-    print(f"[Sentinela] Banco: {db.descricao_banco()}")
+    print("[Sentinela] Banco: Postgres externo (SENTINELA_DB_URL)")
     print(f"[Sentinela] Usuário admin: {ADMIN_USUARIO}")
     print("[Sentinela] Código de instalação: painel → seção 06 · Instalação.")
 
 
-def main() -> None:
-    host = os.environ.get("SENTINELA_HOST", "127.0.0.1")
-    print(f"[Sentinela] Início: http://{'localhost' if host in ('127.0.0.1', '0.0.0.0') else host}:{PORTA}")
-    print(f"[Sentinela] Painel: /painel")
-    print(f"[Sentinela] API:    /api/ping · versão {VERSAO}")
-    app.run(host=host, port=PORTA, debug=False)
-
-
-avisar_configuracao_padrao()
-
-if __name__ == "__main__":
-    main()
+avisar_configuracao()

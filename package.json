@@ -14,8 +14,6 @@
     "@convex-dev/auth": "^0.0.90",
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
-    "@neon/config": "^1.9.5",
-    "@neon/env": "^1.6.6",
     "@oslojs/crypto": "^1.0.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

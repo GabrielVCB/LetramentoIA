@@ -31,6 +31,10 @@ const EXEMPLOS_DEMO = [
     texto: "Estou com erro na API. Minha chave é sk-proj-8fJ2kLm9Qr4Tz7Xb1Nc6Vd3.",
   },
   {
+    rotulo: "Senha",
+    texto: "My password is Hunter2!",
+  },
+  {
     rotulo: "Sem risco",
     texto: "Pode revisar a redação deste e-mail de agradecimento para o cliente?",
   },
@@ -58,8 +62,7 @@ const ETAPAS = [
   {
     numero: "04",
     titulo: "Auditoria sem conteúdo",
-    texto:
-      "Só o alerta chega ao servidor: site, departamento, nível, tipos e a decisão do colaborador. Nunca o texto.",
+    texto:                    "Só o alerta chega ao servidor: site, departamento, IP de origem, nível, tipos e a decisão do colaborador. Nunca o texto.",
   },
 ];
 
@@ -149,7 +152,7 @@ export default function Landing() {
               <p className="mt-7 max-w-md text-sm leading-7 text-muted-foreground">
                 Um painel de governança e letramento em IA para reduzir o vazamento de
                 informações corporativas. A extensão lê o que o colaborador digita no ChatGPT,
-                Gemini, Claude e Copilot — e avisa antes do envio. O texto nunca sai da máquina.
+                Gemini, Claude e Copilot — e avisa antes do envio. O texto nunca sai do navegador.
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -173,7 +176,7 @@ export default function Landing() {
               <dl className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-border pt-5">
                 <div>
                   <dt className="rotulo">Sites</dt>
-                  <dd className="mt-1 font-serif text-2xl">05</dd>
+                  <dd className="mt-1 font-serif text-2xl">06</dd>
                 </div>
                 <div>
                   <dt className="rotulo">Áreas</dt>
@@ -201,7 +204,7 @@ export default function Landing() {
                     <span className="size-1.5 rounded-full bg-risco-baixo" aria-hidden />
                     chatgpt.com
                   </span>
-                  <span className="rotulo">prévia · análise local</span>
+                  <span className="rotulo">prévia · análise no navegador</span>
                 </div>
 
                 <Textarea
@@ -242,7 +245,8 @@ export default function Landing() {
               <p className="mt-3 flex items-start gap-2 text-[11px] leading-5 text-muted-foreground">
                 <span className="mt-1.5 block size-1 shrink-0 bg-foreground/40" aria-hidden />
                 A classificação vem da matriz de risco editável no painel. Esta prévia usa os
-                mesmos detectores da extensão, rodando no seu navegador.
+                mesmos detectores da extensão, rodando no seu navegador. “Senha:123”, “minha senha
+                é 123” e “My password is Hunter2!” caem na mesma regra, de risco alto.
               </p>
             </motion.div>
           </div>
@@ -259,8 +263,7 @@ export default function Landing() {
                   {site}
                 </span>
               ))}
-            </div>
-            <span className="rotulo">análise local</span>
+            </div>              <span className="rotulo">análise no navegador</span>
           </div>
         </div>
 
@@ -467,8 +470,8 @@ export default function Landing() {
                 </h2>
               </div>
               <p className="max-w-xs text-xs leading-6 text-muted-foreground">
-                Extensão Manifest V3 (Chrome ou Edge), servidor Flask com banco Postgres na
-                nuvem (ou SQLite na máquina) e painel servido pela mesma aplicação.
+                Extensão Manifest V3 (Chrome ou Edge), servidor Flask na nuvem (Render) com banco
+                Postgres (Neon) e painel servido pela mesma aplicação, 24 horas por dia.
               </p>
             </div>
 
@@ -505,8 +508,8 @@ export default function Landing() {
               </p>
               <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t border-background/15 pt-6 text-xs text-background/60">
                 <span>Relatórios com filtros de data, área e nível</span>
-                <span>Retenção configurável</span>
-                <span>Exportação em CSV</span>
+                <span>Departamentos sem informação (“Não informado”)</span>
+                <span>Exportação em CSV e PDF</span>
               </div>
             </div>
 
@@ -533,13 +536,14 @@ export default function Landing() {
         {/* CTA */}
         <motion.section {...fade} className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
           <div className="flex flex-col items-center border-y border-border py-16 text-center lg:py-20">
-            <p className="rotulo">Painel administrativo</p>
+            <p className="rotulo">Painel administrativo · acesso restrito</p>
             <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.05] tracking-tight text-balance lg:text-5xl">
               Comece pelo painel. Depois instale a extensão.
             </h2>
             <p className="mt-5 max-w-md text-sm leading-7 text-muted-foreground">
-              Regras, áreas, mensagens educativas, auditoria e relatórios de letramento em um só
-              lugar. Entre com e-mail ou como convidado para explorar.
+              O painel é dos administradores: regras, áreas, mensagens educativas, auditoria e
+              relatórios de letramento em um só lugar. O colaborador não faz login — ele usa a
+              extensão. Nesta prévia, a entrada de convidado serve apenas para explorar.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild className="rounded-sm">
@@ -565,7 +569,7 @@ export default function Landing() {
             </Link>
             <p className="mt-3 max-w-sm text-[11px] leading-5 text-muted-foreground">
               Painel de governança, auditoria e letramento em IA. Extensão MV3 (Chrome e Edge) +
-              servidor Flask, na própria máquina ou publicado na nuvem.
+              servidor Flask com Postgres, publicado na nuvem.
             </p>
           </div>
 
@@ -614,7 +618,7 @@ export default function Landing() {
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-4 text-[10px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <span>© {new Date().getFullYear()} Sentinela</span>
-            <span className="tabular">Chrome/Edge MV3 · Flask · Postgres · nuvem ou local</span>
+            <span className="tabular">Chrome/Edge MV3 · Flask · Postgres · nuvem 24 h</span>
           </div>
         </div>
       </footer>

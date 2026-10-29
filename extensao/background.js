@@ -4,11 +4,9 @@
  * Centraliza TODAS as chamadas de rede, evitando CORS/mixed content nas
  * páginas das IAs. Funciona igual no Chrome e no Microsoft Edge.
  *
- * Quando o servidor está na própria máquina (127.0.0.1), o alerta é enviado
- * direto, sem código. Quando está publicado na nuvem, cada pedido leva o
- * código de instalação (X-API-Token) configurado nas Opções.
- * Sem fila e sem alarmes de reenvio: o cache de regras existe só para o aviso
- * continuar funcionando quando o servidor estiver fora do ar.
+ * Cada pedido leva o código de instalação (X-API-Token) configurado nas
+ * Opções. Sem fila e sem alarmes de reenvio: o cache de regras existe só para
+ * o aviso continuar funcionando quando o servidor estiver fora do ar.
  */
 "use strict";
 
@@ -19,8 +17,6 @@ const TENTATIVAS = 2;
 
 // Endereço do servidor da empresa. Fica fixo aqui para que uma instalação nova
 // já nasça apontada para a nuvem, sem ninguém precisar digitar o endereço.
-// Para testar na própria máquina, basta trocar por http://localhost:5000 nas
-// Opções da extensão.
 const SERVIDOR_PADRAO = "https://sentinela-r7ge.onrender.com";
 
 const CONFIGURACAO_PADRAO = {
@@ -36,6 +32,7 @@ const CONFIGURACAO_PADRAO = {
     "claude.ai",
     "copilot.cloud.microsoft",
     "copilot.microsoft.com",
+    "copilot.com",
   ],
 };
 
@@ -238,7 +235,7 @@ async function sincronizarConfig(forcar) {
 }
 
 // ---------------------------------------------------------------------------
-// Alertas (envio direto ao servidor local)
+// Alertas (envio direto ao servidor da empresa)
 // ---------------------------------------------------------------------------
 
 function sanearAlerta(alerta) {
@@ -391,10 +388,10 @@ chrome.runtime.onMessage.addListener(function (mensagem, remetente, responder) {
 // ---------------------------------------------------------------------------
 
 /**
- * Quem já tinha a extensão salva com o padrão antigo (localhost) é movido uma
- * única vez para o servidor da empresa, para não continuar enviando alertas
- * para a própria máquina. A marca fica gravada: se a pessoa voltar a usar
- * http://localhost:5000 de propósito, o valor dela é respeitado.
+ * Quem já tinha a extensão salva com o endereço antigo de teste (localhost) é
+ * movido uma única vez para o servidor da empresa, para não continuar enviando
+ * alertas para a própria máquina. A marca fica gravada: se a pessoa voltar a
+ * usar http://localhost:5000 de propósito, o valor dela é respeitado.
  */
 async function migrarServidorPadrao() {
   if (await lerArmazenado(CHAVES.migracaoServidor, false)) return;

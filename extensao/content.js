@@ -111,9 +111,10 @@
     },
   };
 
-  // O Copilot passou a responder em copilot.cloud.microsoft. O endereço antigo
-  // continua listado porque ainda redireciona para o novo.
+  // O Copilot já respondeu em copilot.microsoft.com, copilot.cloud.microsoft e
+  // copilot.com (o endereço que o Edge usa). Os três apontam para o mesmo site.
   SITES["copilot.cloud.microsoft"] = SITES["copilot.microsoft.com"];
+  SITES["copilot.com"] = SITES["copilot.microsoft.com"];
 
   // Espelho local das mensagens padrão (fallback quando o servidor nunca respondeu).
   var MENSAGENS_PADRAO = {
@@ -209,8 +210,13 @@
   function siteAutorizado() {
     var host = hostNormalizado();
     var ativos = estado.settings.sitesAtivos || [];
+    // Liberar um endereço do Copilot libera os três (a extensão pode ter sido
+    // configurada antes de copilot.com existir).
+    var ehCopilot = host === "copilot.com" || host.endsWith(".copilot.com") ||
+      host.indexOf("copilot.") === 0;
     return ativos.some(function (item) {
-      return host === item || host.endsWith("." + item);
+      if (host === item || host.endsWith("." + item)) return true;
+      return ehCopilot && item.indexOf("copilot.") === 0;
     });
   }
 

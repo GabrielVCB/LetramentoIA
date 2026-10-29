@@ -181,13 +181,22 @@
       });
     }
 
-    var senhas = texto.match(/(?:senha|password|passwd|pwd|credencial)\s*[:=]/gi) || [];
-    if (senhas.length > 0) {
+    // Senhas escritas ("senha:123") e também faladas ("minha senha é 123",
+    // "my password is Hunter2!"), como na extensão.
+    var padroesSenha = [
+      /(?:senha|password|passwd|pwd|credencial|credenciais)(?:\s+[\w\u00C0-\u017F-]+){0,4}(?:\s*[:=]|\s+(?:é|eh|e|são|sao|será|sera|fica|está|esta|is|are))\s*["']?[^\s"',.;]{2,}/gi,
+      /(?:senha|password|passwd|pwd)\s*[:=]?\s*[A-Za-z0-9!@#$%&*._-]{1,}\d[A-Za-z0-9!@#$%&*._-]*/gi,
+    ];
+    var senhas = 0;
+    padroesSenha.forEach(function (padrao) {
+      senhas += (texto.match(padrao) || []).length;
+    });
+    if (senhas > 0) {
       deteccoes.push({
         tipo: "Senha ou credencial",
         area: "TI",
         risco: "alto",
-        ocorrencias: senhas.length,
+        ocorrencias: senhas,
       });
     }
 

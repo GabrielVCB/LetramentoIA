@@ -1,18 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Sentinela — Governança e Letramento em IA",
-  "version": "2.2.0",
+  "version": "2.6",
   "description": "Analisa localmente o que você digita, cola ou anexa em IAs públicas, avisa antes do envio e registra apenas o alerta no painel de governança.",
   "permissions": ["storage", "offscreen"],
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
-  "host_permissions": [
-    "https://sentinela-r7ge.onrender.com/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
-  ],
+  "host_permissions": ["https://sentinela-r7ge.onrender.com/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -30,7 +26,9 @@
         "https://claude.ai/*",
         "https://copilot.cloud.microsoft/*",
         "https://copilot.microsoft.com/*",
-        "https://www.copilot.microsoft.com/*"
+        "https://www.copilot.microsoft.com/*",
+        "https://copilot.com/*",
+        "https://www.copilot.com/*"
       ],
       "js": ["detectores.js", "content.js"],
       "run_at": "document_idle"

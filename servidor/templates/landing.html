@@ -33,7 +33,7 @@
         <p class="lp-entrada">
           Um painel de governança e letramento em IA para reduzir o vazamento de informações
           corporativas. A extensão lê o que o colaborador digita no ChatGPT, Gemini, Claude e
-          Copilot — e avisa antes do envio. O texto nunca sai da máquina.
+          Copilot — e avisa antes do envio. O texto nunca sai do navegador.
         </p>
 
         <div class="lp-acoes">
@@ -45,7 +45,7 @@
         </div>
 
         <dl class="lp-numeros">
-          <div><dt>Sites</dt><dd>05</dd></div>
+          <div><dt>Sites</dt><dd>06</dd></div>
           <div><dt>Áreas</dt><dd>{{ "%02d"|format(areas|length) }}</dd></div>
           <div><dt>Texto enviado</dt><dd>00</dd></div>
         </dl>
@@ -55,7 +55,7 @@
         <div class="lp-demo-caixa" id="demo-caixa">
           <div class="lp-demo-topo">
             <span class="lp-demo-site"><span class="lp-ponto" aria-hidden="true"></span> chatgpt.com</span>
-            <span class="rotulo">prévia · análise local</span>
+            <span class="rotulo">prévia · análise no navegador</span>
           </div>
 
           <label class="lp-demo-campo">
@@ -87,7 +87,8 @@
         <p class="lp-demo-observacao">
           <span aria-hidden="true"></span>
           A classificação vem da matriz editável no painel. Esta prévia usa os mesmos detectores
-          da extensão, rodando no seu navegador.
+          da extensão, rodando no seu navegador. “My password is Hunter2!”, “minha senha é 123” e
+          “senha:123” caem na mesma regra, de risco alto — a senha não precisa vir depois de dois-pontos.
         </p>
       </div>
     </section>
@@ -100,9 +101,10 @@
           <span>chat.openai.com</span><i>/</i>
           <span>gemini.google.com</span><i>/</i>
           <span>claude.ai</span><i>/</i>
-          <span>copilot.cloud.microsoft</span>
+          <span>copilot.cloud.microsoft</span><i>/</i>
+          <span>copilot.com</span>
         </div>
-        <span class="rotulo">análise local</span>
+        <span class="rotulo">análise no navegador</span>
       </div>
     </div>
 
@@ -173,7 +175,7 @@
         </div>
 
         <blockquote>
-          “O texto não sai da máquina. Nem para o servidor da própria empresa.”
+          “O texto não sai do navegador. Só o alerta chega ao servidor da empresa.”
         </blockquote>
       </div>
     </section>
@@ -222,7 +224,8 @@
         </table>
       </div>
       <p class="lp-nota-matriz">
-        Regras editáveis no painel · a extensão sincroniza a matriz a cada cinco minutos.
+        Regras editáveis no painel · a extensão sincroniza a matriz a cada cinco minutos. A matriz
+        nasce em <code>crud.py</code>, em Python puro.
       </p>
     </section>
 
@@ -234,8 +237,8 @@
             <h2>Do campo de texto à auditoria.</h2>
           </div>
           <p>
-            Extensão Manifest V3 (Chrome ou Edge), servidor Flask com banco Postgres na nuvem
-            (ou SQLite na própria máquina) e painel servido pela mesma aplicação.
+            Extensão Manifest V3 (Chrome ou Edge), servidor Flask na nuvem (Render) com banco
+            Postgres (Neon) e painel servido pela mesma aplicação, 24 horas por dia.
           </p>
         </div>
 
@@ -258,7 +261,7 @@
           <div>
             <p class="lp-num">04</p>
             <h3>Auditoria sem conteúdo</h3>
-            <p>Só o alerta chega ao servidor: site, departamento, nível, tipos, origem e a decisão do colaborador.</p>
+            <p>Só o alerta chega ao servidor: site, departamento, IP de origem, nível, tipos e a decisão do colaborador.</p>
           </div>
         </div>
 
@@ -283,6 +286,16 @@
             <h3>Regras bilíngues</h3>
             <p>“Senha” e “password”, “contrato” e “contract”, “orçamento” e “budget” acionam a mesma regra.</p>
           </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">CSV · PDF</span>
+            <h3>Exportação do relatório</h3>
+            <p>Os alertas filtrados saem em CSV ou em PDF, com os mesmos filtros de data, área, nível e departamento.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">Python</span>
+            <h3>Regras em Python puro</h3>
+            <p>As regras nascem em um CRUD em Python puro, sem banco e sem JSON. O banco é só a cópia que o painel e a extensão usam.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -299,8 +312,8 @@
           </p>
           <div class="lp-letramento-lista">
             <span>Relatórios com filtros de data, área e nível</span>
-            <span>Retenção configurável</span>
-            <span>Exportação em CSV</span>
+            <span>Departamentos sem informação (“Não informado”)</span>
+            <span>Exportação em CSV e PDF</span>
           </div>
         </div>
         <div class="lp-letramento-numero">
@@ -322,10 +335,11 @@
     </section>
 
     <section class="lp-limite lp-cta">
-      <p class="rotulo">Painel administrativo</p>
+      <p class="rotulo">Painel administrativo · acesso restrito</p>
       <h2>Comece pelo painel. Depois instale a extensão.</h2>
       <p class="lp-entrada">
-        Regras, áreas, mensagens educativas, auditoria e relatórios de letramento em um só lugar.
+        O painel é só dos administradores: regras, áreas, mensagens educativas, auditoria e
+        relatórios de letramento em um só lugar. O colaborador não faz login — ele usa a extensão.
       </p>
       <div class="lp-acoes">
         <a class="botao primario" href="{{ url_for('login') }}">Entrar no painel <span aria-hidden="true">→</span></a>
@@ -342,8 +356,8 @@
           <span class="micro">governança de ia</span>
         </a>
         <p class="lp-rodape-texto">
-          Painel de governança, auditoria e letramento em IA. Extensão Chrome MV3 + servidor
-          Flask, na própria máquina ou publicado na nuvem.
+          Painel de governança, auditoria e letramento em IA. Extensão MV3 (Chrome e Edge) +
+          servidor Flask com Postgres, publicado na nuvem.
         </p>
       </div>
 
@@ -366,7 +380,7 @@
     <div class="lp-rodape-base">
       <div class="lp-limite">
         <span>© {{ ano }} Sentinela</span>
-        <span class="lp-mono">Chrome MV3 · Flask · Postgres · nuvem ou local</span>
+        <span class="lp-mono">Chrome/Edge MV3 · Flask · Postgres · nuvem 24 h</span>
       </div>
     </div>
   </footer>

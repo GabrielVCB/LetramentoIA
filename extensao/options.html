@@ -27,9 +27,7 @@
             <h2>Servidor</h2>
             <p>
               O endereço do servidor da empresa já vem preenchido. Cole apenas o código que
-              aparece no painel, em <strong>06 · Instalação</strong>. Para testar na sua própria
-              máquina, troque o endereço por <code>http://localhost:5000</code> e deixe o código
-              vazio.
+              aparece no painel, em <strong>06 · Instalação</strong>.
             </p>
           </div>
         </div>
@@ -39,14 +37,14 @@
             <input id="servidor" type="url" placeholder="https://sua-empresa.onrender.com" />
           </label>
           <label class="campo">
-            <span class="rotulo">Código de instalação (necessário na nuvem)</span>
+            <span class="rotulo">Código de instalação</span>
             <input id="token" type="text" autocomplete="off" spellcheck="false"
-              placeholder="Deixe vazio quando o servidor estiver na sua máquina" />
+              placeholder="Cole o código exibido no painel" />
           </label>
         </div>
         <p class="dica">
           O código não dá acesso ao painel: ele apenas autoriza a extensão a registrar alertas no
-          servidor da empresa. Fora da própria máquina, o servidor recusa alertas sem ele.
+          servidor da empresa. Sem ele, o servidor recusa o alerta.
         </p>
         <div class="acoes">
           <button id="testar" class="botao" type="button">Testar conexão</button>

@@ -3,8 +3,7 @@
 # Arquitetura:
 #   - o servidor web roda na Render, plano Free;
 #   - o banco fica FORA, em um Postgres gratuito (Neon ou Supabase), informado
-#     em SENTINELA_DB_URL. No plano Free a Render não tem disco persistente, e
-#     sem banco externo os alertas seriam apagados a cada reinício;
+#     em SENTINELA_DB_URL. No plano Free a Render não tem disco persistente;
 #   - um monitor externo (UptimeRobot) chama /api/ping a cada 5 minutos para o
 #     serviço não hibernar por inatividade.
 #
@@ -23,8 +22,8 @@ services:
     plan: free
     rootDir: servidor
     buildCommand: pip install -r requirements.txt
-    # Um processo com várias threads. Com o banco externo, dá para aumentar o
-    # número de workers depois; o SQLite local é que exigia um só.
+    # Um processo com várias threads, suficiente para o plano gratuito. Com o
+    # banco externo, dá para aumentar o número de workers depois.
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 60
     healthCheckPath: /api/ping
     envVars:

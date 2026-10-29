@@ -398,6 +398,7 @@ export const SITES_MONITORADOS = [
   "claude.ai",
   "copilot.cloud.microsoft",
   "copilot.microsoft.com",
+  "copilot.com",
 ] as const;
 
 export const ACOES = ["enviou", "cancelou"] as const;

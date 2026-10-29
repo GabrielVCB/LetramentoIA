@@ -1076,16 +1076,14 @@ async function carregarInstalacao() {
   $("instalacao-token").dataset.valor = dados.token;
   $("instalacao-origem").textContent = dados.endereco_visto || "—";
   $("instalacao-versao").textContent = "Versão do servidor " + dados.versao;
-  $("instalacao-banco").textContent = dados.banco_externo
-    ? "Externo (Postgres) · os alertas ficam gravados na nuvem"
-    : "Local (SQLite) · na nuvem os alertas somem a cada reinício";
+  $("instalacao-banco").textContent =
+    "Externo (Postgres) · os alertas ficam gravados na nuvem";
 
   const modo = $("instalacao-modo");
-  modo.textContent = dados.token_obrigatorio ? "Exige código" : "Rede local";
-  modo.className = "badge " + (dados.token_obrigatorio ? "risco-alto" : "risco-baixo");
-  $("instalacao-exigencia").textContent = dados.token_obrigatorio
-    ? "Obrigatório: o servidor recebe conexões de fora desta máquina."
-    : "Dispensado apenas para conexões da própria máquina (127.0.0.1).";
+  modo.textContent = "Exige código";
+  modo.className = "badge risco-alto";
+  $("instalacao-exigencia").textContent =
+    "Obrigatório: a extensão de cada computador precisa do código para registrar alertas.";
 }
 
 async function copiarToken() {
