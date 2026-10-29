@@ -42,7 +42,7 @@ prévia visual, com os mesmos dados de exemplo, e não participa do registro de 
 
 ## crud.py e regras.py
 
-Tudo o que o sistema faz parte de uma lista de regras. O CRUD fica em `servidor/crud.py`, em
+Todo o sistema parte de uma lista de regras. O CRUD fica em `servidor/crud.py`, em
 Python puro, com quatro funções:
 
 ```python
@@ -75,12 +75,30 @@ O caminho até o uso real é curto:
 3. `app.py` entrega as regras para a extensão em `/api/config` e mostra a matriz no painel;
 4. a extensão sincroniza essa cópia a cada cinco minutos e classifica o texto digitado.
 
-O painel usa exatamente as mesmas quatro funções: criar, editar ou excluir uma regra ali chama
-`criar()`, `atualizar()` ou `excluir()` do `crud.py`, e a lista em memória e o banco andam
-juntos — nenhuma operação de regra acontece fora do CRUD.
+O painel usa exatamente as mesmas quatro funções. Criar, editar ou excluir uma regra em
+**04 · Regras** chama `criar()`, `atualizar()` ou `excluir()` do `crud.py`, e a mesma operação
+é gravada no banco: a lista em memória e a tabela `regras` nunca divergem.
 
-Por isso, editar `regras.py` só chega ao banco na próxima inicialização do servidor, e uma
-regra editada ou criada no painel não é sobrescrita por esse processo.
+| Ação no painel | Função do `crud.py` |
+| --- | --- |
+| cadastrar uma regra | `criar()` |
+| ver a matriz de risco | `listar()`, que alimentou o banco na inicialização |
+| salvar uma edição | `atualizar()` |
+| remover uma regra | `excluir()` |
+
+Como a lista existe só enquanto o servidor está rodando, o banco é a cópia que sobrevive ao
+reinício. Daí vêm três consequências:
+
+- editar `regras.py` só chega ao banco na próxima inicialização do servidor;
+- uma regra criada ou editada no painel não é sobrescrita por esse processo;
+- uma regra **excluída** no painel volta na próxima inicialização, porque a semeadura repõe
+toda regra de `regras.py` que estiver faltando. Para remover de vez, ela sai do `regras.py`
+e do painel.
+
+A versão da semeadura fica em `VERSAO_MATRIZ`, em `db.py`. Quando o número muda, a
+inicialização também reaplica `tipo`, `padrao` e `risco` das regras que já existem no banco;
+quando continua o mesmo, só entram as regras novas. É isso que impede um deploy de desfazer o
+que foi ajustado no painel.
 
 ## O que o sistema faz hoje
 
@@ -115,6 +133,19 @@ cinco minutos e mantém o servidor acordado.
 As configurações sensíveis (conexão do banco, senha inicial do painel e chave da sessão)
 ficam nas variáveis do serviço de hospedagem, não no código. O servidor não inicia sem a
 conexão do banco.
+
+## Atualizações
+
+Alteração de texto, comentário, README ou código do servidor viaja com o repositório: o
+commit na `main` dispara o deploy da Render e o endereço público passa a responder com a
+versão nova em cerca de um minuto. A extensão não precisa de nada — ela continua com a cópia
+das regras que já sincronizou.
+
+Quando a mudança está na pasta `extensao/`, o caminho é outro: o ZIP novo substitui a pasta no
+computador e a extensão é recarregada em `chrome://extensions` (ou `edge://extensions`). As
+abas das IAs que já estavam abertas só passam a usar o código novo depois de recarregadas
+também. A versão exibida no painel e no navegador é a mesma, e vem de
+`extensao/manifest.json`.
 
 ## Baixar e instalar a extensão
 
