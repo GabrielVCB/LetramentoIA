@@ -17,7 +17,7 @@ decisão (`enviou` ou `cancelou`).
 O projeto tem quatro partes, e todas giram em volta de uma só ideia: **as regras de risco**.
 
 ```
-crud.py     as quatro funções do CRUD, em Python puro
+crud.py     as quatro funções do CRUD, em Python 
 regras.py   a matriz: chama criar() uma vez para cada regra
 db.py       grava essas regras no banco Postgres
 app.py      serve o painel e a API que a extensão consulta
@@ -27,7 +27,7 @@ extensao/   aplica a cópia das regras no que o colaborador digita
 
 | Pasta / arquivo | O que é |
 | --- | --- |
-| `servidor/crud.py` | CRUD puro em Python: cria, lista, edita e exclui regras. Sem banco, sem JSON. |
+| `servidor/crud.py` | CRUD em Python: cria, lista, edita e exclui regras. |
 | `servidor/regras.py` | A matriz de risco: as 44 chamadas de `criar()`, agrupadas por área. |
 | `servidor/db.py` | Copia as regras de `regras.py` para o Postgres e guarda alertas, áreas, mensagens e administradores. |
 | `servidor/app.py` | Servidor Flask: landing, login, API da extensão e API administrativa. |
@@ -43,7 +43,7 @@ prévia visual, com os mesmos dados de exemplo, e não participa do registro de 
 ## crud.py e regras.py
 
 Todo o sistema parte de uma lista de regras. O CRUD fica em `servidor/crud.py`, em
-Python puro, com quatro funções:
+Python, com quatro funções:
 
 ```python
 criar(nome, area, tipo, padrao, risco)   # CRIA
@@ -66,7 +66,7 @@ crud.criar("CPF", "RH", "regex", r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b", "alto")
 Cada regra diz **o que procurar** (`padrao`), **em qual área** (`area`), **como procurar**
 (`tipo`, `regex` ou `palavra-chave`) e **qual a gravidade** (`risco`: `baixo`, `medio` ou
 `alto`). As regras de palavra-chave são bilíngues (“senha” e “password” acionam a mesma
-regra) e a busca ignora acentos e maiúsculas.
+regra) e a busca ignora acentos e letras maiúsculas.
 
 O caminho até o uso real é curto:
 
@@ -122,7 +122,7 @@ que foi ajustado no painel.
 
 ## Onde o sistema roda
 
-O servidor Flask fica publicado na **Render**, no plano gratuito, com um endereço público. O
+O servidor Flask fica publicado na **Render**, com um endereço público. O
 banco é um Postgres externo da **Neon**, porque o plano gratuito da Render não tem disco
 permanente — sem banco externo, os alertas seriam apagados a cada reinício do serviço.
 
@@ -133,19 +133,6 @@ cinco minutos e mantém o servidor acordado.
 As configurações sensíveis (conexão do banco, senha inicial do painel e chave da sessão)
 ficam nas variáveis do serviço de hospedagem, não no código. O servidor não inicia sem a
 conexão do banco.
-
-## Atualizações
-
-Alteração de texto, comentário, README ou código do servidor viaja com o repositório: o
-commit na `main` dispara o deploy da Render e o endereço público passa a responder com a
-versão nova em cerca de um minuto. A extensão não precisa de nada — ela continua com a cópia
-das regras que já sincronizou.
-
-Quando a mudança está na pasta `extensao/`, o caminho é outro: o ZIP novo substitui a pasta no
-computador e a extensão é recarregada em `chrome://extensions` (ou `edge://extensions`). As
-abas das IAs que já estavam abertas só passam a usar o código novo depois de recarregadas
-também. A versão exibida no painel e no navegador é a mesma, e vem de
-`extensao/manifest.json`.
 
 ## Baixar e instalar a extensão
 
@@ -166,7 +153,7 @@ rodapé do painel. Descompacte e guarde a pasta `extensao/`.
 3. Clique em **Carregar descompactada** e escolha a mesma pasta `extensao/`.
 4. Abra **Opções** da extensão.
 
-**Configurar (igual nos dois)**
+**Configurar em Opções (igual nos dois)**
 
 5. **URL do servidor:** já vem preenchida com o endereço do servidor da empresa.
 6. **Código de instalação:** copie em **06 · Instalação** e cole nas Opções. Ele não dá acesso
@@ -193,14 +180,3 @@ departamento escolhido e o código de instalação colado uma vez nas Opções.
 Os horários aparecem no relógio de quem abre o painel: o banco guarda em UTC e o navegador
 converte para o fuso da máquina, então um alerta das 14h em Brasília é exibido às 14h em
 qualquer computador que esteja no mesmo fuso.
-
-## Rotas principais
-
-| Rota | Método | Para que serve |
-| --- | --- | --- |
-| `/` | GET | Página inicial pública. |
-| `/login` · `/logout` · `/painel` | GET/POST | Acesso e painel administrativo. |
-| `/api/ping` | GET | Verificação de disponibilidade (UptimeRobot). |
-| `/api/config` | GET | Regras, mensagens e áreas para a extensão (exige o código). |
-| `/api/alertas` | POST | Registro do alerta enviado pela extensão (exige o código). |
-| `/api/admin/*` | GET/POST/PUT/DELETE | Alertas, relatórios, exportações, áreas, regras, mensagens, administradores e instalação. |
