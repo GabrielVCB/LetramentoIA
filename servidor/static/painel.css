@@ -440,6 +440,10 @@ button {
   gap: 5px;
 }
 
+.campo[hidden] {
+  display: none;
+}
+
 .campo-inline {
   display: flex;
   align-items: center;

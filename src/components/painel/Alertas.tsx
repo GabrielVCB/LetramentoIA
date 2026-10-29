@@ -117,7 +117,7 @@ export function Alertas() {
       new Date(alerta.dataHora).toLocaleString("pt-BR"),
       alerta.site,
       alerta.departamento,
-      alerta.colaborador || "anônimo",
+      alerta.colaborador || "Não informado",
       ROTULO_RISCO[alerta.nivelRisco],
       alerta.acao === "enviou" ? "Enviou mesmo assim" : "Cancelou",
       alerta.tipos,
@@ -159,7 +159,7 @@ export function Alertas() {
       linhas: paraExportar.map((alerta) => [
         formatarDataHora(alerta.dataHora),
         alerta.departamento,
-        alerta.colaborador || "anonimo",
+        alerta.colaborador || "Não informado",
         alerta.site,
         ROTULO_RISCO[alerta.nivelRisco],
         alerta.acao === "enviou" ? "Enviou" : "Cancelou",
@@ -219,7 +219,7 @@ export function Alertas() {
       <CabecalhoSecao
         numero="05 · Alertas"
         titulo="Auditoria de envios"
-        descricao="Somente metadados: quem digitou (ou anônimo), onde, qual risco, quais tipos e se enviou ou cancelou. O conteúdo da conversa não existe neste banco."
+        descricao="Somente metadados: quem digitou (colaborador identificado), onde, qual risco, quais tipos e se enviou ou cancelou. O conteúdo da conversa não existe neste banco."
         acoes={
           <>
             <Button variant="outline" className="rounded-sm" onClick={exportarCsv}>
@@ -361,7 +361,7 @@ export function Alertas() {
                       {alerta.demo && <span className="rotulo ml-2">amostra</span>}
                     </td>
                     <td className="py-3 pr-3 text-xs text-muted-foreground">
-                      {alerta.colaborador || "anônimo"}
+                      {alerta.colaborador || "Não informado"}
                     </td>
                     <td className="py-3 pr-3 font-mono text-[11px] text-muted-foreground">
                       {alerta.site}
@@ -469,7 +469,7 @@ export function Alertas() {
                   {detalhe.acao === "enviou" ? "Enviou mesmo assim" : "Cancelou e revisou"}
                 </CampoResumo>
                 <CampoResumo rotulo="Colaborador">
-                  {detalhe.colaborador || "anônimo"}
+                  {detalhe.colaborador || "Não informado"}
                 </CampoResumo>
                 <CampoResumo rotulo="Origem">
                   {detalhe.demo ? "Amostra de demonstração" : "Extensão"}

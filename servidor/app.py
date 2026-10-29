@@ -47,7 +47,7 @@ from werkzeug.security import check_password_hash
 import db
 import pdf
 
-VERSAO = "2.6"
+VERSAO = "2.7"
 
 # ---------------------------------------------------------------------------
 # Configuração (sempre por variáveis de ambiente, com padrão de desenvolvimento)
@@ -85,7 +85,7 @@ db.inicializar_banco(ADMIN_USUARIO, ADMIN_SENHA)
 def variaveis_globais():
     """Deixa a versão disponível em todos os templates.
 
-    Ela entra no endereço dos arquivos estáticos (?v=2.6), então o navegador não
+    Ela entra no endereço dos arquivos estáticos (?v=2.7), então o navegador não
     reaproveita um painel.js ou um CSS de uma publicação anterior.
     """
     return {"versao": VERSAO}
@@ -483,7 +483,9 @@ def api_criar_alerta():
 
     site = texto_obrigatorio(corpo.get("site"), "Site", 120)
     departamento = texto_obrigatorio(corpo.get("departamento"), "Departamento", 80)
-    colaborador = texto_opcional(corpo.get("colaborador"), "Colaborador", 80)
+    # O alerta não é anônimo: sem o identificador do colaborador, o servidor
+    # recusa o registro (a extensão também exige o campo nas Opções).
+    colaborador = texto_obrigatorio(corpo.get("colaborador"), "Colaborador", 80)
     nivel_informado = validar_nivel(corpo.get("nivel_risco"), "Nível de risco")
     acao = corpo.get("acao")
     if acao not in db.ACOES:
@@ -1036,7 +1038,7 @@ def api_exportar_csv():
                 linha["site"],
                 origens.get(linha["origem"], "Texto digitado"),
                 linha["departamento"],
-                linha["colaborador"] or "anônimo",
+                linha["colaborador"] or "Não informado",
                 linha["ip"] or "—",
                 rotulos.get(linha["nivel_risco"], linha["nivel_risco"]),
                 "Enviou mesmo assim" if linha["acao"] == "enviou" else "Cancelou",
@@ -1088,7 +1090,7 @@ def api_exportar_pdf():
             [
                 hora_local(linha["data_hora"]),
                 linha["departamento"],
-                linha["colaborador"] or "anônimo",
+                linha["colaborador"] or "Não informado",
                 linha["ip"] or "—",
                 linha["site"],
                 origens.get(linha["origem"], "Texto"),
@@ -1258,6 +1260,25 @@ def api_remover_usuario(admin_id: int):
 @exigir_sessao_api
 def api_trocar_senha(admin_id: int):
     corpo = ler_corpo()
+
+    # Trocar senha exige a senha atual da conta logada: quem já está com a
+    # sessão aberta não consegue definir uma senha nova sem conhecê-la.
+    senha_atual = corpo.get("senha_atual")
+    if not isinstance(senha_atual, str) or not senha_atual:
+        raise ErroValidacao("Informe a senha atual para trocar a senha.")
+
+    conexao_aberta = conexao()
+    try:
+        linha = conexao_aberta.execute(
+            "SELECT senha_hash FROM usuarios_admin WHERE id = ?",
+            (session.get("admin_id"),),
+        ).fetchone()
+    finally:
+        conexao_aberta.close()
+
+    if linha is None or not check_password_hash(linha["senha_hash"], senha_atual):
+        raise ErroValidacao("Senha atual incorreta.")
+
     senha = validar_senha_admin(corpo.get("senha"))
     if db.trocar_senha_admin(admin_id, senha) == 0:
         return jsonify({"erro": "Administrador não encontrado."}), 404
@@ -1615,9 +1636,9 @@ def api_salvar_configuracoes():
     try:
         limiar = int(corpo.get("limiar_gargalo"))
     except (TypeError, ValueError) as erro:
-        raise ErroValidacao("Informe um limiar numérico.") from erro
+        raise ErroValidacao("Informe uma tolerância de risco numérica.") from erro
     if limiar < 0 or limiar > 100:
-        raise ErroValidacao("O limiar deve ficar entre 0 e 100%.")
+        raise ErroValidacao("A tolerância de risco deve ficar entre 0 e 100%.")
 
     conexao_aberta = conexao()
     try:
@@ -1629,7 +1650,7 @@ def api_salvar_configuracoes():
             (str(limiar),),
         )
         conexao_aberta.commit()
-        return jsonify({"limiar_gargalo": limiar, "mensagem": "Limiar atualizado."})
+        return jsonify({"limiar_gargalo": limiar, "mensagem": "Tolerância de risco atualizada."})
     finally:
         conexao_aberta.close()
 

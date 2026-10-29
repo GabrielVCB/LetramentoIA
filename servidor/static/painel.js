@@ -21,7 +21,7 @@ const estado = {
 };
 
 const SECAO_INFO = {
-  visao: "Indicadores, evolução e gargalos de letramento.",
+  visao: "Indicadores, evolução e departamentos críticos.",
   regras: "Detectores editáveis por área e nível de risco.",
   areas: "Estrutura da matriz de risco da empresa.",
   mensagens: "Texto educativo exibido pela extensão.",
@@ -211,7 +211,7 @@ async function carregarResumo() {
     numero(dados.total_enviou) + " envios · " + numero(dados.total_cancelou) + " cancelamentos";
   $("kpi-tipos").textContent = numero(dados.tipos_distintos);
   $("nota-limiar").textContent =
-    "Gargalo = departamento com no mínimo 3 alertas e ao menos " +
+    "Crítico = departamento com no mínimo 3 alertas e ao menos " +
     dados.limiar +
     "% deles em risco alto.";
 
@@ -409,7 +409,7 @@ function desenharLetramento(dados) {
 
     const situacao = criar("td");
     if (gargalos.indexOf(item.departamento) >= 0) {
-      situacao.appendChild(criar("span", "status-gargalo", "Gargalo"));
+      situacao.appendChild(criar("span", "status-gargalo", "Crítico"));
     } else {
       situacao.appendChild(criar("span", "status-ok", "Acompanhar"));
     }
@@ -425,13 +425,13 @@ function desenharGargalos(gargalos) {
 
   if (!gargalos.length) {
     container.appendChild(
-      criar("p", "nota", "Nenhum departamento ultrapassa o limiar configurado."),
+      criar("p", "nota", "Nenhum departamento ultrapassa a tolerância de risco configurada."),
     );
     return;
   }
 
   const bloco = criar("div", "gargalo-bloco");
-  bloco.appendChild(criar("p", "rotulo", "Gargalos de letramento identificados"));
+  bloco.appendChild(criar("p", "rotulo", "Departamentos críticos"));
   const lista = criar("ul");
   gargalos.forEach(function (item) {
     lista.appendChild(
@@ -980,7 +980,7 @@ async function carregarAlertas(pagina) {
 
     linha.appendChild(criar("td", "", quando(alerta.data_hora)));
     linha.appendChild(criar("td", "", alerta.departamento));
-    linha.appendChild(criar("td", "", alerta.colaborador || "anônimo"));
+    linha.appendChild(criar("td", "", alerta.colaborador || "Não informado"));
     linha.appendChild(criar("td", "ip", alerta.ip || "—"));
     linha.appendChild(criar("td", "", alerta.site));
     linha.appendChild(
@@ -1048,7 +1048,7 @@ async function abrirDetalhe(id) {
     const pares = [
       ["Nível de risco", ROTULO_NIVEL[alerta.nivel_risco]],
       ["Ação", alerta.acao === "enviou" ? "Enviou mesmo assim" : "Cancelou e revisou"],
-      ["Colaborador", alerta.colaborador || "anônimo"],
+      ["Colaborador", alerta.colaborador || "Não informado"],
       ["IP de origem", alerta.ip || "—"],
       ["Origem", ROTULO_ORIGEM[alerta.origem] || "Texto digitado"],
     ];
@@ -1187,8 +1187,11 @@ function abrirAdmin(admin) {
   $("admin-usuario").value = editando ? admin.usuario : "";
   $("admin-usuario").disabled = editando;
   $("admin-senha").value = "";
+  $("admin-senha-atual").value = "";
+  $("campo-senha-atual").hidden = !editando;
+  $("admin-senha-atual").required = editando;
   $("admin-dica").textContent = editando
-    ? "Defina uma nova senha para esta conta."
+    ? "Confirme com a sua senha atual e defina a nova senha desta conta."
     : "A senha precisa de pelo menos 8 caracteres.";
   $("dialogo-admin").showModal();
   if (!editando) $("admin-usuario").focus();
@@ -1203,7 +1206,10 @@ async function salvarAdmin(evento) {
     if (id) {
       await api("/api/admin/usuarios/" + id + "/senha", {
         method: "PUT",
-        body: JSON.stringify({ senha: senha }),
+        body: JSON.stringify({
+          senha: senha,
+          senha_atual: $("admin-senha-atual").value,
+        }),
       });
       avisar("Senha atualizada.");
     } else {
@@ -1246,7 +1252,7 @@ function ligarEventos() {
         method: "PUT",
         body: JSON.stringify({ limiar_gargalo: limiar }),
       });
-      avisar("Limiar de gargalo atualizado.");
+      avisar("Tolerância de risco atualizada.");
       await carregarResumo();
     } catch (erro) {
       tratarErro(erro);

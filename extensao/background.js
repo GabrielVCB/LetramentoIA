@@ -83,8 +83,8 @@ async function registrarStatus(conectado, mensagem) {
 // Rede
 // ---------------------------------------------------------------------------
 
-async function requisitar(caminho, opcoes) {
-  const configuracao = await obterConfiguracao();
+async function requisitar(caminho, opcoes, configuracaoExplicita) {
+  const configuracao = configuracaoExplicita || (await obterConfiguracao());
   const controlador = new AbortController();
   const temporizador = setTimeout(() => controlador.abort(), TIMEOUT_MS);
 
@@ -304,9 +304,8 @@ async function enviarAlerta(alerta) {
   // Sem o código, o servidor recusaria o envio. O aviso aparece no popup na
   // hora, em vez de o alerta sumir sem explicação.
   const configuracao = await obterConfiguracao();
-  if (!(configuracao.apiToken || "").trim()) {
-    const mensagem =
-      "Código de instalação não configurado. Abra Opções e cole o código do painel (06 · Instalação).";
+
+  async function recusar(mensagem) {
     await registrarStatus(false, mensagem);
     await salvarArmazenado(CHAVES.ultimoAlerta, {
       ok: false,
@@ -315,6 +314,26 @@ async function enviarAlerta(alerta) {
     });
     return { ok: false, mensagem: mensagem };
   }
+
+  if (!(configuracao.apiToken || "").trim()) {
+    return recusar(
+      "Código de instalação não configurado. Abra Opções e cole o código do painel (06 · Instalação).",
+    );
+  }
+
+  // Sem departamento e sem colaborador não há auditoria: o alerta não é
+  // anônimo. A extensão só registra com os dois campos preenchidos.
+  if (!(configuracao.departamento || "").trim()) {
+    return recusar("Departamento não configurado. Abra Opções e escolha o departamento.");
+  }
+  if (!(configuracao.colaborador || "").trim()) {
+    return recusar(
+      "Colaborador não configurado. Abra Opções e informe o identificador do colaborador.",
+    );
+  }
+
+  limpo.departamento = String(configuracao.departamento).trim().slice(0, 80);
+  limpo.colaborador = String(configuracao.colaborador).trim().slice(0, 80);
 
   let ultimaFalha = "Falha ao registrar.";
 
@@ -368,6 +387,30 @@ chrome.runtime.onMessage.addListener(function (mensagem, remetente, responder) {
       if (mensagem.tipo === "OBTER_CONFIG") {
         const cache = await sincronizarConfig(false);
         responder({ ok: true, cache: cache });
+        return;
+      }
+
+      if (mensagem.tipo === "OBTER_AREAS") {
+        const configuracao = {
+          serverUrl: normalizarUrl(mensagem.serverUrl || CONFIGURACAO_PADRAO.serverUrl),
+          apiToken: String(mensagem.apiToken || "").trim(),
+        };
+        if (!configuracao.apiToken) {
+          responder({ ok: false, erro: "Cole o código de instalação para carregar os departamentos." });
+          return;
+        }
+        try {
+          const resposta = await requisitar("/api/config", { method: "GET" }, configuracao);
+          responder({
+            ok: true,
+            areas: areasDaConfiguracao(resposta),
+          });
+        } catch (erro) {
+          responder({
+            ok: false,
+            erro: erro instanceof Error ? erro.message : "Servidor indisponível.",
+          });
+        }
         return;
       }
 

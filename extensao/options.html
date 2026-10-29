@@ -12,7 +12,7 @@
         <p class="marca">Sentinela</p>
         <h1>Configuração da extensão</h1>
         <p class="subtitulo">
-          Conecte ao servidor da empresa, identifique o departamento e escolha onde o
+          Conecte ao servidor da empresa, informe o departamento e o colaborador e escolha onde o
           monitoramento deve funcionar. Texto, colagens, prints e PDFs são analisados localmente.
         </p>
       </div>
@@ -37,8 +37,8 @@
             <input id="servidor" type="url" placeholder="https://sua-empresa.onrender.com" />
           </label>
           <label class="campo">
-            <span class="rotulo">Código de instalação</span>
-            <input id="token" type="text" autocomplete="off" spellcheck="false"
+            <span class="rotulo">Código de instalação (obrigatório)</span>
+            <input id="token" type="text" autocomplete="off" spellcheck="false" required
               placeholder="Cole o código exibido no painel" />
           </label>
         </div>
@@ -59,24 +59,28 @@
           <span class="numero">02</span>
           <div>
             <h2>Identificação</h2>
-            <p>Esses campos aparecem nos alertas de auditoria. O colaborador é opcional.</p>
+            <p>
+              Os três campos são obrigatórios: sem departamento e sem colaborador o alerta não é
+              registrado, para não haver anonimato na auditoria.
+            </p>
           </div>
         </div>
         <div class="grade">
           <label class="campo">
-            <span class="rotulo">Departamento</span>
-            <select id="departamento">
-              <option value="">Não informado</option>
+            <span class="rotulo">Departamento (obrigatório)</span>
+            <select id="departamento" required>
+              <option value="" disabled selected>Carregando departamentos…</option>
             </select>
           </label>
           <label class="campo">
-            <span class="rotulo">Identificador do colaborador (opcional)</span>
-            <input id="colaborador" type="text" placeholder="Deixe vazio para anônimo" />
+            <span class="rotulo">Identificador do colaborador (obrigatório)</span>
+            <input id="colaborador" type="text" autocomplete="off" required
+              placeholder="Ex.: maria.souza" />
           </label>
         </div>
         <p class="dica">
-          A lista vem das áreas cadastradas no painel, para não gravar um departamento que não
-          existe. Em “Não informado”, o alerta é registrado sem departamento.
+          A lista vem das áreas cadastradas no painel e aparece assim que o código de instalação
+          está preenchido — não é preciso salvar antes. Basta escolher uma das opções.
         </p>
       </section>
 
@@ -85,14 +89,17 @@
           <span class="numero">03</span>
           <div>
             <h2>Monitoramento</h2>
-            <p>Desative temporariamente ou selecione os sites onde o aviso deve aparecer.</p>
+            <p>
+              Desligar o interruptor encerra o aviso em todos os chats; ligar marca todos de volta.
+              Também é possível escolher site por site.
+            </p>
           </div>
         </div>
 
         <label class="linha-opcao">
           <span>
             <strong>Ativar monitoramento</strong>
-            <span class="dica">Analisa texto, colagens e anexos localmente enquanto você digita.</span>
+            <span class="dica">Liga ou desliga a análise em todos os chats de uma vez.</span>
           </span>
           <span class="switch">
             <input id="ativo" type="checkbox" />

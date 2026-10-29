@@ -33,7 +33,8 @@
         <p class="lp-entrada">
           Um painel de governança e letramento em IA para reduzir o vazamento de informações
           corporativas. A extensão lê o que o colaborador digita no ChatGPT, Gemini, Claude e
-          Copilot — e avisa antes do envio. O texto nunca sai do navegador.
+          Copilot — e avisa antes do envio. O texto digitado nunca chega aos servidores da
+          Sentinela.
         </p>
 
         <div class="lp-acoes">
@@ -45,16 +46,16 @@
         </div>
 
         <dl class="lp-numeros">
-          <div><dt>Sites</dt><dd>06</dd></div>
-          <div><dt>Áreas</dt><dd>{{ "%02d"|format(areas|length) }}</dd></div>
-          <div><dt>Texto enviado</dt><dd>00</dd></div>
+          <div><dt>Sites monitorados</dt><dd>4</dd></div>
+          <div><dt>Áreas de risco</dt><dd>{{ areas|length }}</dd></div>
+          <div><dt>Textos enviados ao servidor</dt><dd>0</dd></div>
         </dl>
       </div>
 
       <div class="lp-demo">
         <div class="lp-demo-caixa" id="demo-caixa">
           <div class="lp-demo-topo">
-            <span class="lp-demo-site"><span class="lp-ponto" aria-hidden="true"></span> chatgpt.com</span>
+            <span class="lp-demo-site"><span class="lp-ponto" aria-hidden="true"></span> ChatGPT</span>
             <span class="rotulo">prévia · análise no navegador</span>
           </div>
 
@@ -77,7 +78,7 @@
             <div class="lp-demo-exemplos">
               <button type="button" data-texto="O CPF do novo analista é 529.982.247-25. Pode conferir os dados para o contrato?">CPF</button>
               <button type="button" data-texto="Estou com erro na API. Minha chave é sk-proj-8fJ2kLm9Qr4Tz7Xb1Nc6Vd3.">Token</button>
-              <button type="button" data-texto="My password is Hunter2!">Password</button>
+              <button type="button" data-texto="My password is Hunter2!">Senha</button>
               <button type="button" data-texto="Pode revisar a redação deste e-mail de agradecimento para o cliente?">Sem risco</button>
             </div>
             <span class="lp-demo-nota">nada é gravado aqui</span>
@@ -96,14 +97,12 @@
 
     <div class="lp-faixa">
       <div class="lp-limite lp-faixa-linha">
-        <span class="rotulo">Monitorado</span>
+        <span class="rotulo">Sites monitorados</span>
         <div class="lp-faixa-sites">
-          <span>chatgpt.com</span><i>/</i>
-          <span>chat.openai.com</span><i>/</i>
-          <span>gemini.google.com</span><i>/</i>
-          <span>claude.ai</span><i>/</i>
-          <span>copilot.cloud.microsoft</span><i>/</i>
-          <span>copilot.com</span>
+          <span>ChatGPT</span><i>/</i>
+          <span>Gemini</span><i>/</i>
+          <span>Claude</span><i>/</i>
+          <span>Copilot</span>
         </div>
         <span class="rotulo">análise no navegador</span>
       </div>
@@ -124,7 +123,7 @@
           <span class="lp-num">01</span>
           <div>
             <h3>A IA pública virou atalho</h3>
-            <p>Reescrever e-mail, depurar código, resumir contrato. A ferramenta certa, muitas vezes com o dado errado dentro.</p>
+            <p>Reescrever e-mail, depurar código, resumir contrato: a ferramenta certa, muitas vezes alimentada com dados sensíveis.</p>
           </div>
         </li>
         <li>
@@ -165,7 +164,7 @@
           </div>
           <div>
             <p class="lp-num">02</p>
-            <h3>Classifica pelo contexto</h3>
+            <h3>Classifica por área e nível</h3>
             <p>Cada regra pertence a uma área e a um nível. A maior gravidade encontrada define o alerta: alto, médio ou baixo.</p>
           </div>
           <div>
@@ -176,7 +175,7 @@
         </div>
 
         <blockquote>
-          “O texto não sai do navegador. Só o alerta chega ao servidor da empresa.”
+          “Só o alerta chega ao servidor de auditoria.”
         </blockquote>
       </div>
     </section>
@@ -189,7 +188,7 @@
         </div>
         <p>
           A classificação é sempre a mesma: um item de risco alto eleva a mensagem a risco alto.
-          Sem itens altos, um médio eleva a risco médio. As regras são bilíngues.
+          Sem itens altos, um médio eleva a risco médio. As regras funcionam em português e inglês.
         </p>
       </div>
 
@@ -247,7 +246,7 @@
           <div>
             <p class="lp-num">01</p>
             <h3>Instalação sem loja</h3>
-            <p>A extensão entra no Chrome ou no Edge em modo de desenvolvedor, sem loja e sem depender de nenhum serviço externo.</p>
+            <p>A extensão é instalada no Chrome ou no Edge em modo de desenvolvedor, sem passar por loja de extensões.</p>
           </div>
           <div>
             <p class="lp-num">02</p>
@@ -257,7 +256,7 @@
           <div>
             <p class="lp-num">03</p>
             <h3>Aviso no momento certo</h3>
-            <p>Um painel translúcido em Shadow DOM classifica o risco e explica o que fazer. Em risco alto, o envio pede confirmação.</p>
+            <p>Um painel translúcido em Shadow DOM classifica o risco — inclusive quando é baixo — e explica o que fazer. Em risco alto, o envio pede confirmação.</p>
           </div>
           <div>
             <p class="lp-num">04</p>
@@ -274,7 +273,7 @@
           </div>
           <div class="lp-recurso">
             <span class="lp-recurso-marca">PDF</span>
-            <h3>Arquivos anexados</h3>
+            <h3>PDFs anexados</h3>
             <p>A extração de texto de PDF acontece localmente, página por página, no mesmo pipeline de análise.</p>
           </div>
           <div class="lp-recurso">
@@ -286,6 +285,16 @@
             <span class="lp-recurso-marca">PT / EN</span>
             <h3>Regras bilíngues</h3>
             <p>“Senha” e “password”, “contrato” e “contract”, “orçamento” e “budget” acionam a mesma regra.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">Lista</span>
+            <h3>Departamento em lista</h3>
+            <p>As Opções da extensão só mostram os departamentos cadastrados no painel. Departamento e colaborador são obrigatórios.</p>
+          </div>
+          <div class="lp-recurso">
+            <span class="lp-recurso-marca">Código</span>
+            <h3>Código de instalação</h3>
+            <p>Cada extensão precisa do código exibido em 06 · Instalação para registrar alertas. Sem ele, o servidor recusa o envio.</p>
           </div>
           <div class="lp-recurso">
             <span class="lp-recurso-marca">CSV · PDF</span>
@@ -320,15 +329,16 @@
         <div class="lp-letramento-numero">
           <p class="lp-big">30%</p>
           <p>
-            de alertas em risco alto, com no mínimo três registros no departamento, indicam um
-            gargalo de letramento. O limiar é configurável no painel.
+            Quando 30% ou mais dos alertas de risco alto são enviados mesmo após o aviso (mínimo de
+            três registros no departamento), o departamento é marcado como crítico. A tolerância de
+            risco é configurável no painel.
           </p>
           <div class="lp-como-ler">
             <p class="rotulo lp-rotulo-claro">Como ler</p>
             <p>
-              Muitos cancelamentos indicam que o aviso chegou antes do envio. Muitos envios em
-              risco alto indicam que o aviso precisa de contexto, treinamento ou uma alternativa
-              corporativa.
+              Muitos cancelamentos indicam que o aviso está funcionando. Muitos envios em risco
+              alto indicam que o aviso precisa de contexto, treinamento ou uma ferramenta
+              corporativa autorizada.
             </p>
           </div>
         </div>

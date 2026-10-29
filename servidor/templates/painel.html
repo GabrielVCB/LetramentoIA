@@ -12,7 +12,7 @@
     <nav class="menu-nav" aria-label="Painel">
       <button class="item ativo" type="button" data-ir="visao">
         <span class="numero">01</span>
-        <span><strong>Visão geral</strong><small>Indicadores e gargalos</small></span>
+        <span><strong>Visão geral</strong><small>Indicadores e departamentos críticos</small></span>
       </button>
       <button class="item" type="button" data-ir="regras">
         <span class="numero">02</span>
@@ -45,7 +45,7 @@
 
   <main class="conteudo">
     <div class="topo">
-      <p class="rotulo" id="secao-descricao">Indicadores, evolução e gargalos de letramento.</p>
+      <p class="rotulo" id="secao-descricao">Indicadores, evolução e departamentos críticos.</p>
       <p class="rotulo">Painel administrativo</p>
     </div>
 
@@ -112,7 +112,7 @@
           <h2>Enviou mesmo assim × cancelou</h2>
           <form id="form-limiar" class="form-inline">
             <label class="campo-inline">
-              <span class="rotulo">Limiar (%)</span>
+              <span class="rotulo">Tolerância de Risco (%)</span>
               <input type="number" id="limiar" min="0" max="100" value="{{ limiar_padrao }}" />
             </label>
             <button type="submit" class="botao">Aplicar</button>
@@ -138,7 +138,7 @@
         </div>
 
         <p class="nota" id="nota-limiar">
-          Gargalo = departamento com no mínimo 3 alertas e ao menos {{ limiar_padrao }}% deles em
+          Crítico = departamento com no mínimo 3 alertas e ao menos {{ limiar_padrao }}% deles em
           risco alto.
         </p>
         <div id="gargalos"></div>
@@ -234,7 +234,7 @@
           <p class="rotulo">05 · Alertas</p>
           <h1>Auditoria de envios</h1>
           <p class="subtitulo">
-            Somente metadados: quem digitou (ou anônimo), onde, qual risco, quais tipos e a
+            Somente metadados: quem digitou (colaborador identificado), onde, qual risco, quais tipos e a
             decisão de enviar ou cancelar.
           </p>
         </div>
@@ -552,8 +552,12 @@
       <span class="rotulo">Usuário</span>
       <input type="text" id="admin-usuario" maxlength="40" placeholder="Ex.: maria.souza" required />
     </label>
+    <label class="campo" id="campo-senha-atual" hidden>
+      <span class="rotulo">Senha atual (a sua, para confirmar)</span>
+      <input type="password" id="admin-senha-atual" autocomplete="current-password" />
+    </label>
     <label class="campo">
-      <span class="rotulo">Senha (mínimo 8 caracteres)</span>
+      <span class="rotulo">Nova senha (mínimo 8 caracteres)</span>
       <input type="password" id="admin-senha" minlength="8" autocomplete="new-password" required />
     </label>
     <p class="micro" id="admin-dica"></p>

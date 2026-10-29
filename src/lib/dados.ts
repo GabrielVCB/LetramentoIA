@@ -391,6 +391,10 @@ export const MENSAGENS_PADRAO: Record<Risco, string> = {
     "Esta informação contém dados confidenciais, pessoais, estratégicos ou relacionados à segurança da empresa. Não compartilhe com uma IA pública. Remova os dados sensíveis ou utilize uma ferramenta de IA corporativa autorizada.",
 };
 
+// Nomes apresentados na interface: uma ferramenta por linha, sem repetir a
+// mesma IA em endereços diferentes.
+export const FERRAMENTAS_MONITORADAS = ["ChatGPT", "Gemini", "Claude", "Copilot"] as const;
+
 export const SITES_MONITORADOS = [
   "chatgpt.com",
   "chat.openai.com",

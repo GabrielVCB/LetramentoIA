@@ -43,8 +43,8 @@ async function carregar() {
 
   const configuracao = estado.configuracao || {};
   elementos.monitoramento.checked = Boolean(configuracao.monitoramentoAtivo);
-  elementos.departamento.textContent = configuracao.departamento || "Não informado";
-  elementos.colaborador.textContent = configuracao.colaborador || "anônimo";
+  elementos.departamento.textContent = configuracao.departamento || "não configurado";
+  elementos.colaborador.textContent = configuracao.colaborador || "não configurado";
   elementos.servidor.textContent = configuracao.serverUrl || "—";
   elementos.regras.textContent = estado.cache ? estado.cache.totalRegras : 0;
   elementos.sincronizacao.textContent = estado.cache
@@ -67,6 +67,8 @@ async function carregar() {
 
   if (!(configuracao.apiToken || "").trim()) {
     pintarStatus(false, "Cole o código de instalação nas opções.");
+  } else if (!(configuracao.departamento || "").trim() || !(configuracao.colaborador || "").trim()) {
+    pintarStatus(false, "Informe departamento e colaborador nas opções.");
   } else if (estado.status && estado.status.conectado) {
     pintarStatus(true, estado.status.mensagem || "Servidor conectado");
   } else if (estado.status && estado.status.mensagem) {
@@ -76,11 +78,25 @@ async function carregar() {
   }
 }
 
+const TODOS_OS_SITES = [
+  "chatgpt.com",
+  "chat.openai.com",
+  "gemini.google.com",
+  "claude.ai",
+  "copilot.cloud.microsoft",
+  "copilot.microsoft.com",
+  "copilot.com",
+];
+
 async function alternarMonitoramento(evento) {
   const ativo = evento.target.checked;
   const estado = await enviar({ tipo: "OBTER_ESTADO" });
-  const configuracao = Object.assign({}, estado.configuracao || {}, {
+  const configuracoes = estado.configuracao || {};
+  // O interruptor vale para todos os chats: ligado marca todos, desligado
+  // desmarca todos. A mesma escolha aparece na tela de Opções.
+  const configuracao = Object.assign({}, configuracoes, {
     monitoramentoAtivo: ativo,
+    sitesAtivos: ativo ? TODOS_OS_SITES.slice() : [],
   });
   await chrome.storage.local.set({ configuracao: configuracao });
   pintarStatus(

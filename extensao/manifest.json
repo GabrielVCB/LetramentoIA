@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sentinela — Governança e Letramento em IA",
-  "version": "2.6",
+  "version": "2.7",
   "description": "Analisa localmente o que você digita, cola ou anexa em IAs públicas, avisa antes do envio e registra apenas o alerta no painel de governança.",
   "permissions": ["storage", "offscreen"],
   "optional_host_permissions": ["https://*/*", "http://*/*"],

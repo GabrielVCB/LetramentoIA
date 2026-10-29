@@ -103,10 +103,21 @@ function montarSites(ativos) {
 }
 
 /**
- * Departamentos vêm das áreas cadastradas no painel, para ninguém digitar um
- * nome que não existe. A primeira opção é sempre “Não informado”.
+ * Ligar o monitoramento marca todos os chats; desligar desmarca todos. Assim o
+ * interruptor e a lista de sites nunca contam histórias diferentes.
  */
-function montarDepartamentos(areas, atual) {
+function marcarTodosSites(ativos) {
+  el.sites.querySelectorAll("input[type=checkbox]").forEach(function (checkbox) {
+    checkbox.checked = ativos;
+  });
+}
+
+/**
+ * Departamentos vêm das áreas cadastradas no painel, para ninguém digitar um
+ * nome que não existe. A lista carrega com o código já preenchido, sem
+ * precisar salvar as configurações antes.
+ */
+function montarDepartamentos(areas, atual, vazioTexto) {
   const lista = Array.isArray(areas) ? areas.slice() : [];
   const escolhido = String(atual || "");
   // Um valor antigo, gravado antes da lista existir, continua aparecendo.
@@ -115,15 +126,11 @@ function montarDepartamentos(areas, atual) {
   el.departamento.replaceChildren();
   const vazia = document.createElement("option");
   vazia.value = "";
-  vazia.textContent = "Não informado";
+  vazia.disabled = true;
+  vazia.textContent = lista.length
+    ? "Selecione o departamento"
+    : vazioTexto || "Carregando departamentos…";
   el.departamento.appendChild(vazia);
-
-  if (!lista.length) {
-    const aviso = document.createElement("option");
-    aviso.disabled = true;
-    aviso.textContent = "— salve o código para carregar as áreas —";
-    el.departamento.appendChild(aviso);
-  }
 
   lista.forEach(function (nome) {
     const opcao = document.createElement("option");
@@ -133,6 +140,59 @@ function montarDepartamentos(areas, atual) {
   });
 
   el.departamento.value = escolhido;
+}
+
+let timerAreas = null;
+
+/**
+ * Busca as áreas no servidor usando o endereço e o código que estão na tela,
+ * sem gravar nada. Assim o seletor de departamento já abre preenchido.
+ */
+async function carregarAreas(mostrarErro) {
+  const servidor = el.servidor.value.trim();
+  const codigo = el.token.value.trim();
+  const atual = el.departamento.value;
+
+  if (!/^https?:\/\//i.test(servidor) || !codigo) {
+    montarDepartamentos([], atual, "Cole o código de instalação");
+    return;
+  }
+
+  const resposta = await enviar({
+    tipo: "OBTER_AREAS",
+    serverUrl: servidor,
+    apiToken: codigo,
+  });
+
+  if (resposta.ok) {
+    montarDepartamentos(resposta.areas || [], atual);
+    if (mostrarErro) {
+      avisar(
+        el.resultadoConexao,
+        resposta.areas && resposta.areas.length
+          ? resposta.areas.length + " departamento(s) carregado(s)."
+          : "O servidor respondeu sem departamentos cadastrados.",
+        resposta.areas && resposta.areas.length ? "ok" : "erro",
+      );
+    }
+    return;
+  }
+
+  // Falha ao consultar (código incompleto, por exemplo): mantém a lista que já
+  // estava na tela em vez de esvaziar o seletor.
+  if (el.departamento.options.length <= 1) {
+    montarDepartamentos([], atual, "Não foi possível carregar");
+  }
+  if (mostrarErro) {
+    avisar(el.resultadoConexao, "Falha ao carregar departamentos: " + (resposta.erro || "servidor indisponível"), "erro");
+  }
+}
+
+function agendarAreas() {
+  clearTimeout(timerAreas);
+  timerAreas = setTimeout(function () {
+    void carregarAreas(false);
+  }, 500);
 }
 
 function sitesSelecionados() {
@@ -165,14 +225,19 @@ async function carregar() {
   const configuracao = Object.assign({}, PADROES, estado.configuracao || {});
   el.servidor.value = configuracao.serverUrl || "";
   el.token.value = configuracao.apiToken || "";
-  montarDepartamentos(estado.cache ? estado.cache.areas : [], configuracao.departamento);
   el.colaborador.value = configuracao.colaborador || "";
   el.ativo.checked = Boolean(configuracao.monitoramentoAtivo);
   montarSites(Array.isArray(configuracao.sitesAtivos) ? configuracao.sitesAtivos : SITES_DISPONIVEIS);
+
+  const areas = estado.cache ? estado.cache.areas : [];
+  montarDepartamentos(areas, configuracao.departamento);
+  // Sem cache (primeira abertura), as áreas vêm do servidor na hora.
+  if (!areas || !areas.length) void carregarAreas(false);
   atualizarResumo(estado);
 }
 
-async function salvar(silencioso) {
+async function salvar(silencioso, completo) {
+  const exigirIdentificacao = completo !== false;
   const servidor = el.servidor.value.trim();
   const departamento = el.departamento.value.trim();
 
@@ -191,14 +256,47 @@ async function salvar(silencioso) {
     return false;
   }
 
+  if (exigirIdentificacao && !departamento) {
+    avisar(
+      el.resultadoSalvar,
+      "Escolha o departamento. Ele é obrigatório para identificar a origem do alerta.",
+      "erro",
+    );
+    return false;
+  }
+
+  const colaborador = el.colaborador.value.trim();
+  if (exigirIdentificacao && !colaborador) {
+    avisar(
+      el.resultadoSalvar,
+      "Informe o identificador do colaborador. Ele é obrigatório: os alertas não são anônimos.",
+      "erro",
+    );
+    return false;
+  }
+
+  if (el.ativo.checked && !sitesSelecionados().length) {
+    avisar(
+      el.resultadoSalvar,
+      "Selecione ao menos um chat monitorado ou desligue o monitoramento.",
+      "erro",
+    );
+    return false;
+  }
+
   const permissao = await garantirPermissao(servidor);
   avisoPermissao = permissao.ok ? "" : permissao.mensagem || "";
+
+  // Testar/sincronizar não devem apagar uma identificação já salva: quando o
+  // campo está vazio, o valor anterior é mantido.
+  const guardado = await chrome.storage.local.get("configuracao");
+  const anterior = guardado.configuracao || {};
 
   const configuracao = {
     serverUrl: servidor.replace(/\/+$/, ""),
     apiToken: codigo,
-    departamento: departamento,
-    colaborador: el.colaborador.value.trim(),
+    departamento: departamento || anterior.departamento || "",
+    colaborador: colaborador || anterior.colaborador || "",
     monitoramentoAtivo: el.ativo.checked,
     sitesAtivos: sitesSelecionados(),
   };
@@ -228,8 +326,14 @@ async function salvar(silencioso) {
 }
 
 async function testar() {
-  const salvo = await salvar(true);
-  if (!salvo) return;
+  // Testar a conexão só precisa do endereço e do código; departamento e
+  // colaborador podem ser preenchidos depois, antes de salvar de fato.
+  const salvo = await salvar(true, false);
+  if (!salvo) {
+    avisar(el.resultadoConexao, el.resultadoSalvar.textContent, "erro");
+    el.resultadoSalvar.textContent = "";
+    return;
+  }
   if (avisoPermissao) {
     avisar(el.resultadoConexao, avisoPermissao, "erro");
     return;
@@ -257,8 +361,12 @@ async function testar() {
 }
 
 async function sincronizar() {
-  const salvo = await salvar(true);
-  if (!salvo) return;
+  const salvo = await salvar(true, false);
+  if (!salvo) {
+    avisar(el.resultadoConexao, el.resultadoSalvar.textContent, "erro");
+    el.resultadoSalvar.textContent = "";
+    return;
+  }
   el.sincronizar.disabled = true;
   el.sincronizar.textContent = "Sincronizando…";
   const resposta = await enviar({ tipo: "SINCRONIZAR_AGORA" });
@@ -271,6 +379,7 @@ async function sincronizar() {
       resposta.cache.regras.length + " regra(s) sincronizada(s).",
       "ok",
     );
+    montarDepartamentos(resposta.cache.areas || [], el.departamento.value);
   } else {
     avisar(el.resultadoConexao, "Não foi possível sincronizar agora. O cache anterior foi mantido.", "erro");
   }
@@ -298,6 +407,14 @@ document.addEventListener("DOMContentLoaded", function () {
   el.salvar.addEventListener("click", function () {
     void salvar(false);
   });
+
+  el.ativo.addEventListener("change", function () {
+    marcarTodosSites(el.ativo.checked);
+  });
+
+  // A lista de departamentos acompanha o código digitado, sem salvar antes.
+  el.token.addEventListener("input", agendarAreas);
+  el.servidor.addEventListener("change", agendarAreas);
 
   void carregar();
 });

@@ -170,11 +170,11 @@ export function Laboratorio() {
               </Select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="rotulo">Colaborador (opcional)</span>
+              <span className="rotulo">Colaborador</span>
               <Input
                 value={colaborador}
                 onChange={(evento) => setColaborador(evento.target.value)}
-                placeholder="anonimo"
+                placeholder="seu.nome"
                 className="rounded-sm"
                 maxLength={80}
               />
@@ -267,7 +267,7 @@ export function Laboratorio() {
               <CampoResumo rotulo="Site">{site}</CampoResumo>
               <CampoResumo rotulo="Departamento">{departamentoEfetivo || "—"}</CampoResumo>
               <CampoResumo rotulo="Colaborador">
-                {colaborador.trim() || "anônimo"}
+                {colaborador.trim() || "Não informado"}
               </CampoResumo>
               <CampoResumo rotulo="Nível">
                 {ROTULO_RISCO[analise.nivel]} · {analise.deteccoes.length} tipo(s)

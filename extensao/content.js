@@ -789,13 +789,19 @@
   function deveMostrarBanner() {
     if (estado.bannerOculto) return false;
     if (!estado.campo || !estado.campo.isConnected) return false;
+    if (!monitoramentoAtivo()) return false;
     var temAnexo = estado.anexos.length > 0;
     // Qualquer detecção mostra o aviso, inclusive as de risco baixo (e-mail,
     // nome de fornecedor). O envio de risco baixo continua liberado: o aviso
     // serve para o colaborador revisar antes de enviar.
     var temRelevante = estado.analise.deteccoes.length > 0;
-    if (!temAnexo && !temRelevante) return false;
-    if (!temAnexo && !estado.textoAnalisado.trim()) return false;
+    // Texto digitado também recebe o aviso de risco baixo, como já acontecia
+    // com imagens e PDFs. Um prompt de verdade (a partir de 12 caracteres)
+    // mostra “Risco Baixo · sem detecções”, sem piscar a cada tecla.
+    var textoAnalisado = estado.textoAnalisado.trim();
+    var temPrompt = textoAnalisado.length >= 12;
+    if (!temAnexo && !temRelevante && !temPrompt) return false;
+    if (!temAnexo && !textoAnalisado) return false;
     return true;
   }
 
@@ -1048,6 +1054,7 @@
   // -------------------------------------------------------------------------
 
   function abrirModal(botao) {
+    if (!monitoramentoAtivo()) return;
     var analise = estado.analise;
     if (analise.nivel !== "alto" && analise.nivel !== "medio") return;
 
@@ -1267,6 +1274,8 @@
 
   function tratarIntencaoDeEnvio(evento, botao) {
     if (estado.permitirEnvio) return;
+    // Monitoramento desligado: a extensão não analisa, não avisa e não bloqueia.
+    if (!monitoramentoAtivo()) return;
     if (botao && (botao.disabled || botao.getAttribute("aria-disabled") === "true")) return;
 
     var analise = analisarAgora();
@@ -1335,6 +1344,7 @@
         if (evento.key !== "Enter" || evento.shiftKey || evento.ctrlKey || evento.metaKey || evento.altKey) {
           return;
         }
+        if (!monitoramentoAtivo() || !estado.campo) return;
         if (!caminhoTemCampo(evento)) return;
         tratarIntencaoDeEnvio(evento, null);
       },
@@ -1663,6 +1673,14 @@
         mudancas.configuracao.newValue || {},
       );
       if (!monitoramentoAtivo()) {
+        // Desligar o monitoramento fecha o aviso e o modal na hora, inclusive
+        // com a página já aberta; nada mais é bloqueado no envio.
+        estado.textoAnalisado = "";
+        estado.analise = { nivel: "baixo", deteccoes: [], totalOcorrencias: 0 };
+        estado.snapshotPendente = null;
+        estado.anexos = [];
+        estado.colagem = null;
+        estado.bannerOculto = false;
         esconderInterface();
         return;
       }

@@ -30,9 +30,11 @@ export function Visao({ onNavegar }: { onNavegar: (secao: SecaoId) => void }) {
     setSalvando(true);
     try {
       await salvarConfiguracoes({ limiarGargalo: limiar });
-      toast.success("Limiar de gargalo atualizado.");
+      toast.success("Tolerância de risco atualizada.");
     } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Não foi possível salvar o limiar.");
+      toast.error(
+        erro instanceof Error ? erro.message : "Não foi possível salvar a tolerância de risco.",
+      );
     } finally {
       setSalvando(false);
     }
@@ -179,7 +181,7 @@ export function Visao({ onNavegar }: { onNavegar: (secao: SecaoId) => void }) {
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <label className="flex flex-col gap-1">
-              <span className="rotulo">Limiar de gargalo (%)</span>
+              <span className="rotulo">Tolerância de Risco (%)</span>
               <Input
                 type="number"
                 min={0}
@@ -232,7 +234,7 @@ export function Visao({ onNavegar }: { onNavegar: (secao: SecaoId) => void }) {
                     </td>
                     <td className="py-3 pr-4">
                       {gargalo ? (
-                        <span className="text-[11px] font-medium text-risco-alto">Gargalo</span>
+                        <span className="text-[11px] font-medium text-risco-alto">Crítico</span>
                       ) : (
                         <span className="text-[11px] text-muted-foreground">Acompanhar</span>
                       )}
@@ -244,13 +246,13 @@ export function Visao({ onNavegar }: { onNavegar: (secao: SecaoId) => void }) {
           </table>
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
-          Gargalo = departamento com no mínimo 3 alertas e ao menos {limiar}% deles em risco
+          Crítico = departamento com no mínimo 3 alertas e ao menos {limiar}% deles em risco
           alto.
         </p>
 
         {relatorio.gargalos.length > 0 && (
           <div className="border-l-2 border-risco-alto bg-risco-alto-bg/50 px-5 py-4">
-            <p className="rotulo mb-2">Gargalos de letramento identificados</p>
+            <p className="rotulo mb-2">Departamentos críticos</p>
             <ul className="flex flex-col gap-1.5">
               {relatorio.gargalos.map((item) => (
                 <li key={item.departamento} className="flex items-baseline gap-2 text-sm">

@@ -180,6 +180,7 @@
   font-family: var(--serif);
   font-size: 26px;
   line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* ------------------------------------------------------------- demo local */

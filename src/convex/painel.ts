@@ -730,7 +730,7 @@ export const salvarConfiguracoes = mutation({
     await exigirSessao(ctx);
     const limiar = Math.trunc(args.limiarGargalo);
     if (!Number.isFinite(limiar) || limiar < 0 || limiar > 100) {
-      throw new ConvexError("O limiar deve ficar entre 0 e 100%.");
+      throw new ConvexError("A tolerância de risco deve ficar entre 0 e 100%.");
     }
     const existente = await ctx.db
       .query("configuracoes")

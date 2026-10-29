@@ -11,8 +11,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AREAS_SEED,
+  FERRAMENTAS_MONITORADAS,
   MENSAGENS_PADRAO,
-  SITES_MONITORADOS,
   type Risco,
 } from "@/lib/dados";
 import type { RegraEntrada } from "@/lib/detectores";
@@ -45,7 +45,7 @@ const ETAPAS = [
     numero: "01",
     titulo: "Instalação sem loja",
     texto:
-      "A extensão entra no Chrome ou no Edge em modo de desenvolvedor, sem loja e sem depender de nenhum serviço externo.",
+      "A extensão é instalada no Chrome ou no Edge em modo de desenvolvedor, sem passar por loja de extensões.",
   },
   {
     numero: "02",
@@ -57,7 +57,7 @@ const ETAPAS = [
     numero: "03",
     titulo: "Aviso no momento certo",
     texto:
-      "Um painel em Shadow DOM classifica o risco, lista os tipos e explica o que fazer. Em risco alto, o envio pede confirmação.",
+      "Um painel em Shadow DOM classifica o risco — inclusive quando é baixo —, lista os tipos e explica o que fazer. Em risco alto, o envio pede confirmação.",
   },
   {
     numero: "04",
@@ -152,7 +152,8 @@ export default function Landing() {
               <p className="mt-7 max-w-md text-sm leading-7 text-muted-foreground">
                 Um painel de governança e letramento em IA para reduzir o vazamento de
                 informações corporativas. A extensão lê o que o colaborador digita no ChatGPT,
-                Gemini, Claude e Copilot — e avisa antes do envio. O texto nunca sai do navegador.
+                Gemini, Claude e Copilot — e avisa antes do envio. O texto digitado nunca chega aos
+                servidores da Sentinela.
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -175,18 +176,16 @@ export default function Landing() {
 
               <dl className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-border pt-5">
                 <div>
-                  <dt className="rotulo">Sites</dt>
-                  <dd className="mt-1 font-serif text-2xl">06</dd>
+                  <dt className="rotulo">Sites monitorados</dt>
+                  <dd className="mt-1 font-serif text-2xl">{FERRAMENTAS_MONITORADAS.length}</dd>
                 </div>
                 <div>
-                  <dt className="rotulo">Áreas</dt>
-                  <dd className="mt-1 font-serif text-2xl">
-                    {String(AREAS_SEED.length).padStart(2, "0")}
-                  </dd>
+                  <dt className="rotulo">Áreas de risco</dt>
+                  <dd className="mt-1 font-serif text-2xl">{AREAS_SEED.length}</dd>
                 </div>
                 <div>
-                  <dt className="rotulo">Texto enviado</dt>
-                  <dd className="mt-1 font-serif text-2xl">00</dd>
+                  <dt className="rotulo">Textos enviados ao servidor</dt>
+                  <dd className="mt-1 font-serif text-2xl">0</dd>
                 </div>
               </dl>
             </motion.div>
@@ -202,7 +201,7 @@ export default function Landing() {
                 <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
                   <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
                     <span className="size-1.5 rounded-full bg-risco-baixo" aria-hidden />
-                    chatgpt.com
+                    ChatGPT
                   </span>
                   <span className="rotulo">prévia · análise no navegador</span>
                 </div>
@@ -255,9 +254,9 @@ export default function Landing() {
         {/* Faixa de sites monitorados */}
         <div className="border-y border-border">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <span className="rotulo">Monitorado</span>
+            <span className="rotulo">Sites monitorados</span>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground">
-              {SITES_MONITORADOS.map((site, indice) => (
+              {FERRAMENTAS_MONITORADAS.map((site, indice) => (
                 <span key={site} className="flex items-center gap-3">
                   {indice > 0 && <span className="text-border">/</span>}
                   {site}
@@ -287,7 +286,7 @@ export default function Landing() {
                   n: "01",
                   titulo: "A IA pública virou atalho",
                   texto:
-                    "Reescrever e-mail, depurar código, resumir contrato. A ferramenta certa, muitas vezes com o dado errado dentro.",
+                    "Reescrever e-mail, depurar código, resumir contrato: a ferramenta certa, muitas vezes alimentada com dados sensíveis.",
                 },
                 {
                   n: "02",
@@ -349,7 +348,7 @@ export default function Landing() {
                 },
                 {
                   n: "02",
-                  titulo: "Classifica pelo contexto",
+                  titulo: "Classifica por área e nível",
                   texto:
                     "Cada regra pertence a uma área e a um nível. A maior gravidade encontrada define o alerta: alto, médio ou baixo.",
                 },
@@ -369,7 +368,7 @@ export default function Landing() {
             </div>
 
             <p className="mt-12 border-l-2 border-foreground/20 pl-5 font-serif text-xl leading-relaxed text-foreground/80 italic">
-              “O texto não sai da máquina. Nem para o servidor da própria empresa.”
+              “Só o alerta chega ao servidor de auditoria.”
             </p>
           </div>
         </motion.section>
@@ -516,17 +515,18 @@ export default function Landing() {
             <div className="lg:border-l lg:border-background/15 lg:pl-12">
               <p className="font-serif text-7xl leading-none tracking-tight">30%</p>
               <p className="mt-4 max-w-xs text-sm leading-6 text-background/65">
-                de alertas em risco alto, com no mínimo três registros no departamento, indicam um
-                gargalo de letramento. O limiar é configurável no painel.
+                Quando 30% ou mais dos alertas de risco alto são enviados mesmo após o aviso
+                (mínimo de três registros no departamento), o departamento é marcado como crítico.
+                A tolerância de risco é configurável no painel.
               </p>
               <div className="mt-8 border-t border-background/15 pt-4">
                 <p className="text-[10px] tracking-[0.18em] text-background/45 uppercase">
                   Como ler
                 </p>
                 <p className="mt-2 text-xs leading-6 text-background/60">
-                  Muitos cancelamentos indicam que o aviso chegou antes do envio. Muitos envios em
-                  risco alto indicam que o aviso precisa de contexto, treinamento ou uma
-                  alternativa corporativa.
+                  Muitos cancelamentos indicam que o aviso está funcionando. Muitos envios em risco
+                  alto indicam que o aviso precisa de contexto, treinamento ou uma ferramenta
+                  corporativa autorizada.
                 </p>
               </div>
             </div>

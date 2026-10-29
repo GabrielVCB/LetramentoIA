@@ -18,7 +18,7 @@ export const SECOES: Secao[] = [
     id: "visao",
     numero: "01",
     rotulo: "Visão geral",
-    descricao: "Indicadores, evolução e gargalos de letramento.",
+    descricao: "Indicadores, evolução e departamentos críticos.",
   },
   {
     id: "regras",
