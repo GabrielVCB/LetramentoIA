@@ -26,8 +26,8 @@
           <div>
             <h2>Servidor</h2>
             <p>
-              O endereço do servidor da empresa já vem preenchido. Cole apenas o código que
-              aparece no painel, em <strong>06 · Instalação</strong>.
+              O endereço do servidor da empresa já vem preenchido. Cole o código que aparece no
+              painel, em <strong>06 · Instalação</strong>; sem ele, o servidor recusa os alertas.
             </p>
           </div>
         </div>
@@ -44,7 +44,8 @@
         </div>
         <p class="dica">
           O código não dá acesso ao painel: ele apenas autoriza a extensão a registrar alertas no
-          servidor da empresa. Sem ele, o servidor recusa o alerta.
+          servidor da empresa. Se ele for apagado (por exemplo, ao reinstalar a extensão), o popup
+          avisa que os alertas pararam de ser registrados.
         </p>
         <div class="acoes">
           <button id="testar" class="botao" type="button">Testar conexão</button>
@@ -64,8 +65,9 @@
         <div class="grade">
           <label class="campo">
             <span class="rotulo">Departamento</span>
-            <input id="departamento" type="text" list="lista-areas" placeholder="Ex.: RH" />
-            <datalist id="lista-areas"></datalist>
+            <select id="departamento">
+              <option value="">Não informado</option>
+            </select>
           </label>
           <label class="campo">
             <span class="rotulo">Identificador do colaborador (opcional)</span>
@@ -73,7 +75,8 @@
           </label>
         </div>
         <p class="dica">
-          Se o departamento ficar vazio, o alerta é registrado como “Não informado”.
+          A lista vem das áreas cadastradas no painel, para não gravar um departamento que não
+          existe. Em “Não informado”, o alerta é registrado sem departamento.
         </p>
       </section>
 

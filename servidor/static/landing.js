@@ -20,13 +20,15 @@
   var ROTULOS = { baixo: "Baixo", medio: "Médio", alto: "Alto" };
   var MENSAGENS = {
     baixo:
-      "Não foram identificados os tipos de informações corporativas analisados pelo sistema. Ainda assim, revise o conteúdo antes de compartilhá-lo.",
+      "Nenhum dado de risco médio ou alto foi identificado neste conteúdo. Revise antes de compartilhar: o envio fica registrado no painel de governança.",
     medio:
       "Esta informação contém dados internos que podem apresentar riscos à empresa. Evite compartilhar informações desnecessárias e verifique as regras de uso de IA da empresa antes do compartilhamento.",
     alto:
       "Esta informação contém dados confidenciais, pessoais, estratégicos ou relacionados à segurança da empresa. Não compartilhe com uma IA pública. Remova os dados sensíveis ou utilize uma ferramenta de IA corporativa autorizada.",
   };
 
+  // Esta página é pública: a prévia usa os detectores embutidos, sem pedir ao
+  // servidor a matriz da empresa (que agora exige o código de instalação).
   var regras = [];
   var ultimo = "";
 
@@ -84,18 +86,4 @@
   });
 
   analisar();
-
-  fetch("/api/config")
-    .then(function (resposta) {
-      return resposta.ok ? resposta.json() : null;
-    })
-    .then(function (config) {
-      if (!config) return;
-      if (Array.isArray(config.regras)) regras = config.regras;
-      if (config.mensagens) window.__mensagensSentinela = config.mensagens;
-      analisar();
-    })
-    .catch(function () {
-      /* a demonstração continua com os detectores embutidos */
-    });
 })();

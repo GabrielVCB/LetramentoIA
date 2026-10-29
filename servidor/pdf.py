@@ -85,9 +85,11 @@ def _colunas_proporcionais(colunas) -> list:
     return larguras
 
 
-def _montar_paginas(titulo, subtitulo, colunas, linhas, nota) -> list:
+def _montar_paginas(titulo, subtitulo, colunas, linhas, nota, gerado_em="") -> list:
     larguras = _colunas_proporcionais(colunas)
-    gerado_em = datetime.now().strftime("%d/%m/%Y %H:%M")
+    # O horário vem pronto de quem chama, já no fuso do servidor; o padrão só
+    # existe para uso isolado do módulo.
+    gerado_em = gerado_em or datetime.now().strftime("%d/%m/%Y %H:%M")
 
     paginas = []
     resto = list(linhas)
@@ -244,6 +246,10 @@ def _montar_documento(paginas: list) -> bytes:
     return bytes(saida)
 
 
-def gerar_pdf(titulo: str, subtitulo: str, colunas, linhas, nota: str = "") -> bytes:
+def gerar_pdf(
+    titulo: str, subtitulo: str, colunas, linhas, nota: str = "", gerado_em: str = ""
+) -> bytes:
     """Monta o PDF completo a partir de colunas [(titulo, peso)] e linhas de texto."""
-    return _montar_documento(_montar_paginas(titulo, subtitulo, colunas, linhas, nota))
+    return _montar_documento(
+        _montar_paginas(titulo, subtitulo, colunas, linhas, nota, gerado_em)
+    )

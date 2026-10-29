@@ -4,9 +4,11 @@
  * Centraliza TODAS as chamadas de rede, evitando CORS/mixed content nas
  * páginas das IAs. Funciona igual no Chrome e no Microsoft Edge.
  *
- * Cada pedido leva o código de instalação (X-API-Token) configurado nas
- * Opções. Sem fila e sem alarmes de reenvio: o cache de regras existe só para
- * o aviso continuar funcionando quando o servidor estiver fora do ar.
+ * Cada pedido leva X-API-Token com o código de instalação copiado do painel
+ * (06 · Instalação). Sem o código, o servidor recusa o envio — e o popup
+ * mostra o aviso em vez de falhar em silêncio. Sem fila e sem alarmes de
+ * reenvio: o cache de regras existe só para o aviso continuar funcionando
+ * quando o servidor estiver fora do ar.
  */
 "use strict";
 
@@ -42,6 +44,7 @@ const CHAVES = {
   status: "statusConexao",
   filaAntiga: "filaAlertas",
   migracaoServidor: "migracaoServidorNuvem",
+  ultimoAlerta: "ultimoAlerta",
 };
 
 // ---------------------------------------------------------------------------
@@ -87,8 +90,9 @@ async function requisitar(caminho, opcoes) {
 
   try {
     const cabecalhos = { ...(opcoes && opcoes.headers ? opcoes.headers : {}) };
-    // Servidor na nuvem: identificação da empresa em cada pedido.
-    if (configuracao.apiToken) cabecalhos["X-API-Token"] = configuracao.apiToken;
+    // Código de instalação copiado do painel, guardado nas Opções.
+    const codigo = (configuracao.apiToken || "").trim();
+    if (codigo) cabecalhos["X-API-Token"] = codigo;
 
     const resposta = await fetch(`${normalizarUrl(configuracao.serverUrl)}${caminho}`, {
       ...opcoes,
@@ -213,6 +217,11 @@ async function sincronizarConfig(forcar) {
     if (!configuracao.serverUrl) {
       throw new Error("Configure a URL do servidor nas opções.");
     }
+    if (!(configuracao.apiToken || "").trim()) {
+      throw new Error(
+        "Código de instalação não configurado. Abra Opções e cole o código do painel (06 · Instalação).",
+      );
+    }
 
     const resposta = await requisitar("/api/config", { method: "GET" });
     if (!resposta || !Array.isArray(resposta.regras) || !resposta.mensagens) {
@@ -222,6 +231,7 @@ async function sincronizarConfig(forcar) {
     const novoCache = {
       regras: resposta.regras,
       mensagens: resposta.mensagens,
+      areas: Array.isArray(resposta.areas) ? resposta.areas : [],
       atualizadoEm: Date.now(),
     };
     await salvarArmazenado(CHAVES.cache, novoCache);
@@ -269,6 +279,22 @@ function sanearAlerta(alerta) {
 
 async function enviarAlerta(alerta) {
   const limpo = sanearAlerta(alerta);
+
+  // Sem o código, o servidor recusaria o envio. O aviso aparece no popup na
+  // hora, em vez de o alerta sumir sem explicação.
+  const configuracao = await obterConfiguracao();
+  if (!(configuracao.apiToken || "").trim()) {
+    const mensagem =
+      "Código de instalação não configurado. Abra Opções e cole o código do painel (06 · Instalação).";
+    await registrarStatus(false, mensagem);
+    await salvarArmazenado(CHAVES.ultimoAlerta, {
+      ok: false,
+      mensagem: mensagem,
+      em: Date.now(),
+    });
+    return { ok: false, mensagem: mensagem };
+  }
+
   let ultimaFalha = "Falha ao registrar.";
 
   // Uma repetição imediata cobre o intervalo em que o Flask está iniciando.
@@ -281,6 +307,11 @@ async function enviarAlerta(alerta) {
         body: JSON.stringify(limpo),
       });
       await registrarStatus(true, "Alerta registrado.");
+      await salvarArmazenado(CHAVES.ultimoAlerta, {
+        ok: true,
+        mensagem: resultado && resultado.duplicado ? "Alerta já registrado." : "Alerta registrado.",
+        em: Date.now(),
+      });
       return {
         ok: true,
         id: resultado && resultado.id,
@@ -296,6 +327,11 @@ async function enviarAlerta(alerta) {
   }
 
   await registrarStatus(false, `Alerta não registrado: ${ultimaFalha}`);
+  await salvarArmazenado(CHAVES.ultimoAlerta, {
+    ok: false,
+    mensagem: ultimaFalha,
+    em: Date.now(),
+  });
   return { ok: false, mensagem: ultimaFalha };
 }
 
@@ -352,19 +388,22 @@ chrome.runtime.onMessage.addListener(function (mensagem, remetente, responder) {
       }
 
       if (mensagem.tipo === "OBTER_ESTADO") {
-        const [configuracao, status, cache] = await Promise.all([
+        const [configuracao, status, cache, ultimoAlerta] = await Promise.all([
           obterConfiguracao(),
           lerArmazenado(CHAVES.status, null),
           lerArmazenado(CHAVES.cache, null),
+          lerArmazenado(CHAVES.ultimoAlerta, null),
         ]);
         responder({
           ok: true,
           configuracao: configuracao,
           status: status,
+          ultimoAlerta: ultimoAlerta,
           cache: cache
             ? {
                 totalRegras: cache.regras ? cache.regras.length : 0,
                 atualizadoEm: cache.atualizadoEm,
+                areas: Array.isArray(cache.areas) ? cache.areas : [],
               }
             : null,
         });
@@ -409,6 +448,15 @@ chrome.runtime.onInstalled.addListener(async function () {
   await migrarServidorPadrao();
   // Versões antigas guardavam alertas numa fila; a 2.1 envia direto.
   await chrome.storage.local.remove(CHAVES.filaAntiga);
+
+  // Primeira instalação (ou reinstalação, que apaga as Opções): abre a tela
+  // para colar o código, em vez de ficar recusando alertas em silêncio.
+  const configuracao = await obterConfiguracao();
+  if (!(configuracao.apiToken || "").trim()) {
+    await registrarStatus(false, "Código de instalação não configurado.");
+    await chrome.runtime.openOptionsPage();
+    return;
+  }
   await sincronizarConfig(true);
 });
 

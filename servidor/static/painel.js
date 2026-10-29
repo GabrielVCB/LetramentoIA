@@ -17,6 +17,7 @@ const estado = {
   pagina: 1,
   totalPaginas: 1,
   alertaAtual: null,
+  secao: "visao",
 };
 
 const SECAO_INFO = {
@@ -79,12 +80,31 @@ function limpar(elemento) {
   elemento.replaceChildren();
 }
 
+/**
+ * O servidor manda o horário em UTC, com "Z" no fim. O navegador converte para
+ * o relógio da própria máquina, então quem abre o painel no horário de Brasília
+ * vê 14:00 quando o alerta foi registrado às 14:00 (e não 17:00).
+ */
 function quando(iso) {
   if (!iso) return "—";
-  const partes = String(iso).split("T");
-  const data = (partes[0] || "").split("-");
-  if (data.length !== 3) return iso;
-  return data[2] + "/" + data[1] + "/" + data[0] + (partes[1] ? " " + partes[1].slice(0, 5) : "");
+  const texto = String(iso).replace(" ", "T");
+  const comFuso = /(Z|[+-]\d{2}:?\d{2})$/i.test(texto) ? texto : texto + "Z";
+  const momento = new Date(comFuso);
+  if (Number.isNaN(momento.getTime())) {
+    const partes = texto.split("T");
+    const data = (partes[0] || "").split("-");
+    if (data.length !== 3) return iso;
+    return (
+      data[2] + "/" + data[1] + "/" + data[0] + (partes[1] ? " " + partes[1].slice(0, 5) : "")
+    );
+  }
+  return momento.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function diaCurto(iso) {
@@ -140,6 +160,7 @@ function confirmar(titulo, texto, rotulo, aoConfirmar) {
 // ---------------------------------------------------------------------------
 
 function irPara(secao) {
+  estado.secao = secao;
   document.querySelectorAll("[data-painel]").forEach(function (bloco) {
     bloco.classList.toggle("ativa", bloco.dataset.painel === secao);
   });
@@ -1075,7 +1096,7 @@ async function carregarInstalacao() {
   $("instalacao-token").textContent = dados.token;
   $("instalacao-token").dataset.valor = dados.token;
   $("instalacao-origem").textContent = dados.endereco_visto || "—";
-  $("instalacao-versao").textContent = "Versão do servidor " + dados.versao;
+  $("instalacao-versao").textContent = "versão " + dados.versao;
   $("instalacao-banco").textContent =
     "Externo (Postgres) · os alertas ficam gravados na nuvem";
 
@@ -1377,7 +1398,31 @@ function ligarEventos() {
   });
 }
 
+/**
+ * Atualização automática: um alerta registrado pela extensão aparece no painel
+ * em poucos segundos, sem precisar recarregar a página. Fica parada quando a
+ * aba está escondida e não mexe nas seções de cadastro.
+ */
+const INTERVALO_ATUALIZACAO = 15000;
+
+function iniciarAtualizacaoAutomatica() {
+  window.setInterval(function () {
+    if (document.hidden) return;
+    if (document.querySelector("dialog[open]")) return;
+    if (estado.secao === "visao") {
+      carregarResumo().catch(function () {
+        /* erro já aparece no toast da próxima ação */
+      });
+    } else if (estado.secao === "alertas") {
+      carregarAlertas(estado.pagina).catch(function () {
+        /* mantém a lista atual se a rede falhar */
+      });
+    }
+  }, INTERVALO_ATUALIZACAO);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ligarEventos();
   irPara("visao");
+  iniciarAtualizacaoAutomatica();
 });

@@ -43,7 +43,7 @@ async function carregar() {
 
   const configuracao = estado.configuracao || {};
   elementos.monitoramento.checked = Boolean(configuracao.monitoramentoAtivo);
-  elementos.departamento.textContent = configuracao.departamento || "não configurado";
+  elementos.departamento.textContent = configuracao.departamento || "Não informado";
   elementos.colaborador.textContent = configuracao.colaborador || "anônimo";
   elementos.servidor.textContent = configuracao.serverUrl || "—";
   elementos.regras.textContent = estado.cache ? estado.cache.totalRegras : 0;
@@ -51,8 +51,22 @@ async function carregar() {
     ? formatarQuando(estado.cache.atualizadoEm)
     : "nunca";
 
-  if (!configuracao.departamento) {
-    pintarStatus(false, "Configure o departamento nas opções.");
+  const ultimo = estado.ultimoAlerta;
+  if (ultimo && ultimo.em) {
+    elementos.ultimoAlerta.textContent = formatarQuando(ultimo.em);
+    elementos.ultimoAlerta.title = ultimo.mensagem || "";
+  } else {
+    elementos.ultimoAlerta.textContent = "nenhum ainda";
+  }
+  if (ultimo && ultimo.ok === false) {
+    elementos.detalheAlerta.textContent = "Falha ao registrar: " + (ultimo.mensagem || "servidor recusou o alerta.");
+    elementos.detalheAlerta.hidden = false;
+  } else {
+    elementos.detalheAlerta.hidden = true;
+  }
+
+  if (!(configuracao.apiToken || "").trim()) {
+    pintarStatus(false, "Cole o código de instalação nas opções.");
   } else if (estado.status && estado.status.conectado) {
     pintarStatus(true, estado.status.mensagem || "Servidor conectado");
   } else if (estado.status && estado.status.mensagem) {
@@ -98,6 +112,8 @@ document.addEventListener("DOMContentLoaded", function () {
   elementos.servidor = document.getElementById("servidor");
   elementos.regras = document.getElementById("regras");
   elementos.sincronizacao = document.getElementById("sincronizacao");
+  elementos.ultimoAlerta = document.getElementById("ultimo-alerta");
+  elementos.detalheAlerta = document.getElementById("detalhe-alerta");
   elementos.testar = document.getElementById("testar");
   elementos.opcoes = document.getElementById("opcoes");
 

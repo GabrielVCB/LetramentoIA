@@ -102,6 +102,32 @@ function montarSites(ativos) {
   });
 }
 
+/**
+ * Departamentos vêm das áreas cadastradas no painel, para ninguém digitar um
+ * nome que não existe. A primeira opção é sempre “Não informado”.
+ */
+function montarDepartamentos(areas, atual) {
+  const lista = Array.isArray(areas) ? areas.slice() : [];
+  const escolhido = String(atual || "");
+  // Um valor antigo, gravado antes da lista existir, continua aparecendo.
+  if (escolhido && lista.indexOf(escolhido) < 0) lista.unshift(escolhido);
+
+  el.departamento.replaceChildren();
+  const vazia = document.createElement("option");
+  vazia.value = "";
+  vazia.textContent = "Não informado";
+  el.departamento.appendChild(vazia);
+
+  lista.forEach(function (nome) {
+    const opcao = document.createElement("option");
+    opcao.value = nome;
+    opcao.textContent = nome;
+    el.departamento.appendChild(opcao);
+  });
+
+  el.departamento.value = escolhido;
+}
+
 function sitesSelecionados() {
   return Array.from(el.sites.querySelectorAll("input[type=checkbox]:checked")).map(
     function (checkbox) {
@@ -132,7 +158,7 @@ async function carregar() {
   const configuracao = Object.assign({}, PADROES, estado.configuracao || {});
   el.servidor.value = configuracao.serverUrl || "";
   el.token.value = configuracao.apiToken || "";
-  el.departamento.value = configuracao.departamento || "";
+  montarDepartamentos(estado.cache ? estado.cache.areas : [], configuracao.departamento);
   el.colaborador.value = configuracao.colaborador || "";
   el.ativo.checked = Boolean(configuracao.monitoramentoAtivo);
   montarSites(Array.isArray(configuracao.sitesAtivos) ? configuracao.sitesAtivos : SITES_DISPONIVEIS);
@@ -148,12 +174,22 @@ async function salvar(silencioso) {
     return false;
   }
 
+  const codigo = el.token.value.trim();
+  if (!codigo) {
+    avisar(
+      el.resultadoSalvar,
+      "Cole o código de instalação que aparece no painel, em 06 · Instalação.",
+      "erro",
+    );
+    return false;
+  }
+
   const permissao = await garantirPermissao(servidor);
   avisoPermissao = permissao.ok ? "" : permissao.mensagem || "";
 
   const configuracao = {
     serverUrl: servidor.replace(/\/+$/, ""),
-    apiToken: el.token.value.trim(),
+    apiToken: codigo,
     departamento: departamento,
     colaborador: el.colaborador.value.trim(),
     monitoramentoAtivo: el.ativo.checked,
@@ -161,15 +197,25 @@ async function salvar(silencioso) {
   };
 
   await chrome.storage.local.set({ configuracao: configuracao });
+
   if (!silencioso) {
+    // Sincroniza na hora: confirma o código e já carrega a lista de departamentos.
+    const sincronizado = await enviar({ tipo: "SINCRONIZAR_AGORA" });
     if (avisoPermissao) {
       avisar(el.resultadoSalvar, "Configurações salvas. " + avisoPermissao, "erro");
+    } else if (!sincronizado.ok) {
+      avisar(
+        el.resultadoSalvar,
+        "Configurações salvas, mas o servidor recusou o código. Copie o valor de 06 · Instalação e salve de novo.",
+        "erro",
+      );
     } else {
-      avisar(el.resultadoSalvar, "Configurações salvas.", "ok");
+      avisar(el.resultadoSalvar, "Configurações salvas e código aceito.", "ok");
       setTimeout(function () {
         el.resultadoSalvar.textContent = "";
-      }, 2500);
+      }, 3000);
     }
+    await carregar();
   }
   return true;
 }

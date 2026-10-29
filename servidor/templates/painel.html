@@ -313,10 +313,13 @@
           <h1>Extensões e administradores</h1>
           <p class="subtitulo">
             Este é o endereço e o código que a extensão usa nos computadores da empresa. Todo
-            envio de alerta precisa do código abaixo.
+            envio de alerta precisa do código abaixo — a versão do servidor aparece ao lado.
           </p>
         </div>
-        <span class="badge" id="instalacao-modo">—</span>
+        <div class="marcas-cabecalho">
+          <span class="badge" id="instalacao-modo">—</span>
+          <span class="badge versao" id="instalacao-versao">—</span>
+        </div>
       </header>
 
       <section class="bloco-painel">
@@ -356,7 +359,6 @@
 
         <div class="acoes-cabecalho">
           <button type="button" class="botao primario" id="copiar-token">Copiar código</button>
-          <span class="micro" id="instalacao-versao"></span>
         </div>
 
         <p class="nota">

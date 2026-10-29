@@ -9,6 +9,9 @@ apenas o alerta no painel. O texto nunca é enviado nem guardado: o alerta tem s
 departamento, colaborador (opcional), IP de origem, nível de risco, tipos detectados e a
 decisão (`enviou` ou `cancelou`).
 
+**Versão atual: 2.6** — servidor e extensão. A mesma versão aparece no painel, em
+**06 · Instalação**.
+
 ## Como está organizado
 
 O projeto tem quatro partes, e todas giram em volta de uma só ideia: **as regras de risco**.
@@ -90,8 +93,10 @@ regra editada ou criada no painel não é sobrescrita por esse processo.
   limiar de gargalo configurável e filtro de departamento (inclui “Não informado”).
 - **Exportação:** CSV e PDF, com os mesmos filtros da tela.
 - **Chrome e Microsoft Edge:** a mesma extensão roda nos dois navegadores.
+- **Departamento em lista:** as Opções da extensão mostram apenas as áreas cadastradas no
+  painel, para não gravar um departamento que não existe. “Não informado” é uma opção.
 - **Código de instalação:** cada extensão precisa do código exibido no painel para registrar
-  alertas; sem ele, o servidor recusa o envio.
+  alertas; sem ele, o servidor recusa o envio e o popup avisa em vez de falhar em silêncio.
 
 ## Onde o sistema roda
 
@@ -129,9 +134,10 @@ rodapé do painel. Descompacte e guarde a pasta `extensao/`.
 **Configurar (igual nos dois)**
 
 5. **URL do servidor:** já vem preenchida com o endereço do servidor da empresa.
-6. **Código de instalação:** cole o código que aparece no painel, em **06 · Instalação**. Esse
-   código não dá acesso ao painel — ele só autoriza a extensão a registrar alertas.
-7. **Departamento** (ex.: `RH`) e **colaborador** (opcional; vazio = anônimo).
+6. **Código de instalação:** copie em **06 · Instalação** e cole nas Opções. Ele não dá acesso
+   ao painel: só autoriza a extensão a registrar alertas. Sem o código, o envio é recusado.
+7. **Departamento:** escolha na lista (as mesmas áreas do painel) ou deixe “Não informado”.
+   **Colaborador** é opcional; vazio = anônimo.
 8. Clique em **Salvar configurações**, autorize o acesso ao endereço do servidor quando o
    navegador perguntar, e use **Testar conexão** e **Sincronizar regras agora**.
 9. Abra `https://chatgpt.com` (ou Gemini, Claude, Copilot) e digite algo com risco para ver o
@@ -146,8 +152,12 @@ O painel é a área da empresa, não do colaborador: **o acesso é restrito a ad
 com usuário e senha criados na seção **06 · Instalação**. É possível cadastrar vários
 administradores, cada um com o seu login, e trocar senhas por lá.
 
-O colaborador não faz login em lugar nenhum. Ele só tem a extensão instalada, configurada com
-o departamento e o código de instalação.
+O colaborador não faz login em lugar nenhum. Ele só tem a extensão instalada, com o
+departamento escolhido e o código de instalação colado uma vez nas Opções.
+
+Os horários aparecem no relógio de quem abre o painel: o banco guarda em UTC e o navegador
+converte para o fuso da máquina, então um alerta das 14h em Brasília é exibido às 14h em
+qualquer computador que esteja no mesmo fuso.
 
 ## Rotas principais
 
@@ -156,6 +166,6 @@ o departamento e o código de instalação.
 | `/` | GET | Página inicial pública. |
 | `/login` · `/logout` · `/painel` | GET/POST | Acesso e painel administrativo. |
 | `/api/ping` | GET | Verificação de disponibilidade (UptimeRobot). |
-| `/api/config` | GET | Regras e mensagens para a extensão (exige o código). |
-| `/api/alertas` | POST | Registro do alerta (exige o código de instalação). |
+| `/api/config` | GET | Regras, mensagens e áreas para a extensão (exige o código). |
+| `/api/alertas` | POST | Registro do alerta enviado pela extensão (exige o código). |
 | `/api/admin/*` | GET/POST/PUT/DELETE | Alertas, relatórios, exportações, áreas, regras, mensagens, administradores e instalação. |

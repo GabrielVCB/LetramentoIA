@@ -11,8 +11,8 @@ Rotas públicas:
     GET  /                   landing (primeira tela)
     GET  /login              formulário de acesso
     GET  /api/ping
-    GET  /api/config          (exige o código de instalação)
-    POST /api/alertas         (exige o código de instalação)
+    GET  /api/config          (identifica a extensão)
+    POST /api/alertas         (identifica a extensão)
 
 Painel (sessão):
     /painel, /logout
@@ -27,7 +27,7 @@ import io
 import os
 import re
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 from flask import (
@@ -47,7 +47,7 @@ from werkzeug.security import check_password_hash
 import db
 import pdf
 
-VERSAO = "2.6.0"
+VERSAO = "2.6"
 
 # ---------------------------------------------------------------------------
 # Configuração (sempre por variáveis de ambiente, com padrão de desenvolvimento)
@@ -93,8 +93,79 @@ def conexao():
     return db.conectar()
 
 
+# ---------------------------------------------------------------------------
+# Fuso horário
+#
+# O banco guarda tudo em UTC (sem fuso), que é o horário que não muda quando a
+# Render reinicia ou muda de máquina. A exibição usa o fuso de quem está vendo:
+# o painel manda o horário em ISO com "Z" e o navegador converte para o relógio
+# da própria máquina. Para agrupar por dia, filtrar por data e exportar, o
+# servidor usa um fuso fixo, definido em SENTINELA_FUSO_HORAS (padrão -3, o
+# horário de Brasília).
+# ---------------------------------------------------------------------------
+
+def _fuso_do_servidor() -> timezone:
+    try:
+        horas = float((os.environ.get("SENTINELA_FUSO_HORAS") or "-3").strip())
+    except ValueError:
+        horas = -3.0
+    horas = max(-12.0, min(14.0, horas))
+    return timezone(timedelta(hours=horas))
+
+FUSO = _fuso_do_servidor()
+
+
 def agora_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
+    """Agora em UTC, sem fuso: é assim que o banco guarda o horário."""
+    return datetime.now(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds")
+
+
+def como_utc(valor) -> datetime:
+    """Lê um horário ISO (com ou sem fuso) e devolve em UTC, sem fuso."""
+    texto = str(valor).strip()
+    if texto.endswith("Z"):
+        texto = texto[:-1] + "+00:00"
+    momento = datetime.fromisoformat(texto)
+    if momento.tzinfo is None:
+        # Sem fuso, o valor já está em UTC (é o formato gravado pelo servidor).
+        momento = momento.replace(tzinfo=timezone.utc)
+    return momento.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def iso_para_navegador(valor):
+    """Devolve o horário com "Z", para o navegador converter ao fuso da máquina."""
+    if valor in (None, ""):
+        return None
+    try:
+        return como_utc(valor).isoformat(timespec="seconds") + "Z"
+    except ValueError:
+        return valor
+
+
+def hora_local(valor, formato: str = "%d/%m/%Y %H:%M") -> str:
+    """Horário já no fuso do servidor, pronto para CSV e PDF."""
+    if valor in (None, ""):
+        return ""
+    try:
+        return como_utc(valor).replace(tzinfo=timezone.utc).astimezone(FUSO).strftime(formato)
+    except ValueError:
+        return str(valor)
+
+
+def dia_local(valor) -> str:
+    """Data (AAAA-MM-DD) no fuso do servidor — usada nos gráficos por dia."""
+    try:
+        return como_utc(valor).replace(tzinfo=timezone.utc).astimezone(FUSO).date().isoformat()
+    except ValueError:
+        return str(valor)[:10]
+
+
+def limite_utc(data_texto: str, fim: bool = False) -> str:
+    """Converte uma data local (AAAA-MM-DD) no começo/fim do dia, em UTC."""
+    dia = datetime.strptime(data_texto, "%Y-%m-%d").replace(tzinfo=FUSO)
+    if fim:
+        dia = dia + timedelta(days=1)
+    return dia.astimezone(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 # ---------------------------------------------------------------------------
@@ -136,16 +207,13 @@ def exigir_token_api(funcao):
 
 
 def normalizar_data_hora(valor) -> str:
-    """Converte ISO com ou sem fuso para o horário local, sem timezone."""
+    """Converte o horário recebido para UTC, sem fuso, como o banco guarda."""
     if valor in (None, ""):
         return agora_iso()
-    texto = str(valor).strip().replace("Z", "+00:00")
     try:
-        momento = datetime.fromisoformat(texto)
+        momento = como_utc(valor)
     except ValueError as erro:
         raise ErroValidacao("Campo data_hora inválido.") from erro
-    if momento.tzinfo is not None:
-        momento = momento.astimezone().replace(tzinfo=None)
     return momento.isoformat(timespec="seconds")
 
 
@@ -241,14 +309,15 @@ def condicoes_de_filtro(args) -> tuple:
         except ValueError as erro:
             raise ErroValidacao("Data inicial inválida. Use AAAA-MM-DD.") from erro
         condicoes.append("a.data_hora >= ?")
-        parametros.append(f"{de}T00:00:00")
+        parametros.append(limite_utc(de))
     if ate:
         try:
             datetime.strptime(ate, "%Y-%m-%d")
         except ValueError as erro:
             raise ErroValidacao("Data final inválida. Use AAAA-MM-DD.") from erro
-        condicoes.append("a.data_hora <= ?")
-        parametros.append(f"{ate}T23:59:59")
+        # "até" inclui o dia inteiro no fuso local: compara com o começo do dia seguinte.
+        condicoes.append("a.data_hora < ?")
+        parametros.append(limite_utc(ate, fim=True))
 
     departamento = (args.get("departamento") or "").strip()
     if departamento and departamento != "todos":
@@ -277,7 +346,7 @@ def serializar_alerta(linha, itens: list) -> dict:
     return {
         "id": linha["id"],
         "origem": linha["origem"] or "texto",
-        "data_hora": linha["data_hora"],
+        "data_hora": iso_para_navegador(linha["data_hora"]),
         "site": linha["site"],
         "departamento": linha["departamento"],
         "colaborador": linha["colaborador"],
@@ -334,6 +403,8 @@ def api_ping():
             "mensagem": "Sentinela online.",
             "versao": VERSAO,
             "hora": agora_iso(),
+            "hora_local": datetime.now(FUSO).isoformat(timespec="seconds"),
+            "fuso_horas": round(FUSO.utcoffset(None).total_seconds() / 3600, 1),
         }
     )
 
@@ -358,6 +429,14 @@ def api_config():
                 "SELECT nivel, texto FROM mensagens"
             ).fetchall()
         }
+        # Lista fechada de departamentos: as Opções da extensão mostram só estes
+        # nomes, para ninguém gravar um departamento que não existe.
+        areas = [
+            linha["nome"]
+            for linha in conexao_aberta.execute(
+                "SELECT nome FROM areas ORDER BY id"
+            ).fetchall()
+        ]
         return jsonify(
             {
                 "regras": [
@@ -376,6 +455,7 @@ def api_config():
                     nivel: mensagens.get(nivel, db.MENSAGENS_PADRAO[nivel])
                     for nivel in db.NIVEIS
                 },
+                "areas": areas,
                 "atualizado_em": agora_iso(),
             }
         )
@@ -544,7 +624,7 @@ def areas_para_landing() -> list:
 
 
 def contexto_landing() -> dict:
-    return {"areas": areas_para_landing(), "ano": datetime.now().year}
+    return {"areas": areas_para_landing(), "ano": datetime.now(FUSO).year}
 
 
 @app.get("/")
@@ -701,7 +781,7 @@ def api_resumo():
     tipos = sorted(contagem_tipos.values(), key=lambda item: item["total"], reverse=True)[:7]
 
     dias = []
-    hoje = datetime.now().date()
+    hoje = datetime.now(FUSO).date()
     for indice in range(13, -1, -1):
         dia = hoje - timedelta(days=indice)
         dias.append(
@@ -716,7 +796,7 @@ def api_resumo():
         )
     indice_por_dia = {dia["data"]: numero for numero, dia in enumerate(dias)}
     for alerta in alertas:
-        chave = alerta["data_hora"][:10]
+        chave = dia_local(alerta["data_hora"])
         posicao = indice_por_dia.get(chave)
         if posicao is None:
             continue
@@ -871,7 +951,9 @@ def api_limpar_por_idade():
     if dias < 1 or dias > 3650:
         raise ErroValidacao("O número de dias deve ficar entre 1 e 3650.")
 
-    limite = (datetime.now() - timedelta(days=dias)).isoformat(timespec="seconds")
+    limite = (datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=dias)).isoformat(
+        timespec="seconds"
+    )
     conexao_aberta = conexao()
     try:
         cursor = conexao_aberta.execute("DELETE FROM alertas WHERE data_hora < ?", (limite,))
@@ -940,7 +1022,7 @@ def api_exportar_csv():
     for linha in linhas:
         escritor.writerow(
             [
-                linha["data_hora"].replace("T", " "),
+                hora_local(linha["data_hora"]),
                 linha["site"],
                 origens.get(linha["origem"], "Texto digitado"),
                 linha["departamento"],
@@ -994,7 +1076,7 @@ def api_exportar_pdf():
     for linha in linhas:
         registros.append(
             [
-                linha["data_hora"].replace("T", " ")[:16],
+                hora_local(linha["data_hora"]),
                 linha["departamento"],
                 linha["colaborador"] or "anônimo",
                 linha["ip"] or "—",
@@ -1037,6 +1119,7 @@ def api_exportar_pdf():
         ],
         registros,
         "Somente metadados: o texto digitado nunca é armazenado.",
+        gerado_em=datetime.now(FUSO).strftime("%d/%m/%Y %H:%M"),
     )
     return Response(
         conteudo,
@@ -1118,7 +1201,7 @@ def api_listar_usuarios():
             {
                 "id": admin["id"],
                 "usuario": admin["usuario"],
-                "criado_em": admin["criado_em"],
+                "criado_em": iso_para_navegador(admin["criado_em"]),
                 "atual": admin["id"] == atual,
             }
             for admin in db.listar_admins()

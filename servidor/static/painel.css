@@ -347,6 +347,17 @@ button {
   letter-spacing: -0.025em;
 }
 
+.marcas-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge.versao {
+  font-variant-numeric: tabular-nums;
+}
+
 .acoes-cabecalho {
   display: flex;
   flex-wrap: wrap;
