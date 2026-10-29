@@ -194,11 +194,12 @@ rodapé do painel. Descompacte e guarde a pasta `extensao/`.
 5. **URL do servidor:** já vem preenchida com o endereço do servidor da empresa.
 6. **Código de instalação:** copie em **06 · Instalação** e cole nas Opções. Ele não dá acesso
    ao painel: só autoriza a extensão a registrar alertas. Sem o código, o envio é recusado.
-7. **Departamento:** escolha na lista (as mesmas áreas do painel) ou deixe “Não informado”.
-   **Colaborador** é opcional; vazio = anônimo.
-8. Clique em **Salvar configurações**, autorize o acesso ao endereço do servidor quando o
+7. Clique em **Salvar configurações** para habilitar a escolha de departamento.
+8. **Departamento:** escolha na lista (as mesmas áreas do painel) ou deixe “Não informado”.
+   **Colaborador** insira o seu nome (funcionário); vazio = anônimo.
+9. Clique em **Salvar configurações**, autorize o acesso ao endereço do servidor quando o
    navegador perguntar, e use **Testar conexão** e **Sincronizar regras agora**.
-9. Abra `https://chatgpt.com` (ou Gemini, Claude, Copilot) e digite algo com risco para ver o
+10. Abra `https://chatgpt.com` (ou Gemini, Claude, Copilot) e digite algo com risco para ver o
    aviso.
 
 A versão instalada aparece na própria página de extensões do navegador, ao lado do nome
