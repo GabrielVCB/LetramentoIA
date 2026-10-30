@@ -1,12 +1,8 @@
 """
-Sentinela — acesso ao banco Postgres (Neon/Supabase).
+Acesso ao banco Postgres (Neon).
 
 Cria as tabelas, copia para o banco as regras de regras.py (a matriz do
 projeto), semeia as mensagens educativas e garante o administrador inicial.
-
-A string de conexão vem de SENTINELA_DB_URL (ou DATABASE_URL), definida nas
-variáveis de ambiente do serviço. Sem ela o servidor não inicia: não existe
-mais banco local.
 
 Todo acesso é feito com consultas parametrizadas por quem usa este módulo.
 """
@@ -171,7 +167,6 @@ CREATE TABLE IF NOT EXISTS configuracoes (
 
 def _traduzir_sql(texto: str, parametros) -> str:
     """Ajusta o SQL do projeto para o dialeto do Postgres.
-
     Só duas construções precisam de tradução: `GROUP_CONCAT(x, sep)` vira
     `string_agg(x, sep)` e o marcador `?` vira `%s`. Em consultas com
     parâmetros, o sinal `%` literal do texto (por exemplo em um LIKE '%termo%')

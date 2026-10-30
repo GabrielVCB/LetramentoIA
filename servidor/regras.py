@@ -7,11 +7,7 @@ de crud.py. Só a lista de regras.
     tipo "regex"          -> padrão é uma expressão regular (CPF, token, IP)
     tipo "palavra-chave"  -> padrão é uma lista de termos, em português e inglês
 
-O risco é sempre "baixo", "medio" ou "alto". A regra mais grave encontrada no
-texto define o nível do aviso.
-
-As regras estão agrupadas em seis áreas: RH, Financeiro, TI, Segurança da
-Informação, Jurídico e Projetos e Estratégias. O db.py importa este arquivo
+O db.py importa este arquivo
 para copiar a lista para o banco na inicialização do servidor.
 """
 import crud
