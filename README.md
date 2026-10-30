@@ -181,28 +181,23 @@ conexão do banco.
 Para instalar em um computador, basta a pasta `extensao/`:
 
 - **[sentinela-extensao.zip](public/sentinela-extensao.zip)** — a extensão pronta para carregar
-  no navegador. No GitHub, use o botão **Download raw file** para baixar o arquivo.
-
-Descompacte e guarde a pasta `extensao/`.
-
-**Atualizar uma extensão já instalada:** baixe o ZIP novo, descompacte por cima da pasta
-`extensao/` que já está no computador (substituindo os arquivos) e clique no ícone de
-**Recarregar** na página `chrome://extensions` ou `edge://extensions`. Não é preciso remover a
-extensão e adicionar de novo. Feche e abra a aba da IA depois de recarregar.
+  no navegador. No GitHub, use o botão **Download raw file** para baixar o arquivo. Descompacte o arquivo.zip. 
 
 **Google Chrome**
 
 1. Abra `chrome://extensions`.
-2. Ligue o **Modo do desenvolvedor**.
-3. Clique em **Carregar sem compactação** e escolha a pasta `extensao/`.
-4. Abra **Opções** da extensão.
+2. Ligue o **Modo do desenvolvedor/programador**.
+3. Clique em **Carregar sem compactação / expandida** e escolha a pasta `extensao/`.
+4. Clique em **Detalhes**.
+4. Abra **Opções de extensão**.
 
 **Microsoft Edge**
 
 1. Abra `edge://extensions`.
-2. Ligue o **Modo de desenvolvedor**.
-3. Clique em **Carregar descompactada** e escolha a mesma pasta `extensao/`.
-4. Abra **Opções** da extensão.
+2. Ligue o **Modo do desenvolvedor**.
+3. Clique em **Carregar descompactada / sem pacote** e escolha a mesma pasta `extensao/`.
+4. Clique em **Detalhes**.
+4. Abra **Opções de extensão**.
 
 **Configurar em Opções (igual nos dois)**
 
@@ -212,11 +207,8 @@ extensão e adicionar de novo. Feche e abra a aba da IA depois de recarregar.
    digitado, a lista de departamentos carrega sozinha — não é preciso salvar antes.
 7. **Departamento (obrigatório):** escolha na lista, que são exatamente as áreas do painel.
 8. **Colaborador (obrigatório):** informe o identificador da pessoa que usa aquele computador.
-   Não existe mais a opção de alerta anônimo.
 9. Clique em **Salvar configurações** uma única vez, no fim, autorize o acesso ao endereço do
    servidor quando o navegador perguntar, e use **Testar conexão** e **Sincronizar regras agora**.
-10. Abra `https://chatgpt.com` (ou Gemini, Claude, Copilot) e digite algo com risco para ver o
-    aviso. Texto de risco baixo também mostra o aviso, com o rótulo “Risco Baixo”.
 
 A versão instalada aparece na própria página de extensões do navegador, ao lado do nome
 Sentinela.
